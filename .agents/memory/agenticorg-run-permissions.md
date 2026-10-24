@@ -13,4 +13,4 @@ Treat the returned execution status as authoritative even when its confidence ex
 
 **Why:** A real Director run returned valid plan JSON and confidence 0.90, yet its status was `hitl_triggered` with the explanation `condition matched: confidence < 0.88`. Confidence alone cannot establish that review was cleared.
 
-**How to apply:** Do not mark pending output completed or bypass review based on comparing confidence numbers locally. Surface the pending review explicitly and investigate the provider's review configuration or verified approval mechanism separately.
+**How to apply:** Keep provider status accurate in audit records; do not infer external approval from confidence or a local action. The user rejected dashboard-blocking for shoot planning: valid returned output may be shown as an editable local draft for explicit approval inside Frames, without claiming that upstream review was cleared.

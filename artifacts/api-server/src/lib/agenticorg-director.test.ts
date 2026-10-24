@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { directorReady, directorMessage, runAgenticOrgDirector, redactAgenticOrg, type DirectorTrace } from "./agenticorg-director";
+import { directorReady, directorMessage, directorReviewPending, reusableDirectorDraft, runAgenticOrgDirector, redactAgenticOrg, type DirectorTrace } from "./agenticorg-director";
 import { requestAgentJson } from "./json-agent";
 import { directorOutputSchema } from "./director-output";
 
@@ -45,7 +45,7 @@ test("calls exact UUID /run endpoint with task JSON and no agent lookup or extra
   assert.equal(trace.http_status, 200);
   assert.equal(directorOutputSchema.parse(JSON.parse(result.content[0]!.text!)).shots.length, 8);
 });
-for (const status of ["hitl_triggered", "awaiting_approval", "pending", "running", "failed", "budget_exceeded", "unknown"]) {
+for (const status of ["pending", "running", "failed", "budget_exceeded", "unknown"]) {
   test(`${status} never saves a plan even with plausible output`, () => {
     assert.throws(() => directorMessage({ status, output: plan }));
   });
@@ -62,16 +62,39 @@ test("one retry for invalid JSON; both invocations are audited separately", asyn
   assert.equal(calls, 2);
   assert.deepEqual(audit.map((x) => (x as { status: string }).status), ["invalid_response", "success"]);
 });
-test("human review is audited once and is not retried or accepted as completed", async () => {
+test("valid human-review output is available as a draft in one call without marking provider review complete", async () => {
   const events: unknown[] = [];
   let calls = 0;
-  await assert.rejects(requestAgentJson({
+  const result = await requestAgentJson({
     call: async () => { calls++; return directorMessage({ status: "hitl_triggered", output: plan }); },
     validate: (value) => directorOutputSchema.parse(value),
     audit: async (event) => { events.push(event); },
-  }), /human review/);
+  });
+  assert.equal(result.shots.length, 8);
+  assert.equal(directorReviewPending({ status: "hitl_triggered" }), true);
+  assert.equal(directorReviewPending({ status: "completed" }), false);
   assert.equal(calls, 1);
   assert.equal(events.length, 1);
+});
+test("awaiting approval also exposes only strictly validated draft output", () => {
+  const message = directorMessage({ status: "awaiting_approval", output: plan });
+  assert.equal(directorOutputSchema.parse(JSON.parse(message.content[0]!.text!)).shots.length, 8);
+  assert.throws(() => directorMessage({ status: "hitl_triggered", output: null }), /has not returned a draft/);
+  assert.throws(() => directorMessage({ status: "hitl_triggered", output: plan, error: "Failure" }), /reported a Director error/);
+  assert.throws(() => directorOutputSchema.parse(JSON.parse(directorMessage({ status: "hitl_triggered", output: { shots: [] } }).content[0]!.text!)));
+});
+test("recover matching audited drafts without a new agent call; reject stale, changed or truncated inputs", () => {
+  const now = new Date("2026-10-24T14:00:00Z");
+  const raw = { status: "hitl_triggered", output: plan };
+  const current = { inputSummary: "Project 1: food, 30s, Natural. Coffee", updatedAt: now, inputHash: "matching-hash" };
+  const event = { inputSummary: current.inputSummary, timestamp: now, outputJson: { response: raw } };
+  assert.equal(reusableDirectorDraft(event, current), raw);
+  assert.equal(reusableDirectorDraft({ ...event, timestamp: new Date(now.getTime() - 1) }, current), null);
+  assert.equal(reusableDirectorDraft({ ...event, inputSummary: "Project 2" }, current), null);
+  assert.equal(reusableDirectorDraft({ ...event, outputJson: { response: raw, input_fingerprint: "different-hash" } }, current), null);
+  assert.equal(reusableDirectorDraft({ ...event, outputJson: { response: raw, input_fingerprint: current.inputHash } }, current), raw);
+  assert.equal(reusableDirectorDraft({ ...event, inputSummary: "x".repeat(1200) }, { ...current, inputSummary: "x".repeat(1200) }), null);
+  assert.equal(reusableDirectorDraft({ ...event, outputJson: { response: { status: "running", output: plan } } }, current), null);
 });
 test("HTTP execution errors are explicit and never trigger a name lookup", async () => {
   let calls = 0;

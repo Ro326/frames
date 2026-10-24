@@ -1,7 +1,7 @@
 import type { AgentMessage } from "./json-agent";
 
 type Config = { baseUrl?: string; apiKey?: string; agentId?: string };
-export type DirectorTrace = { attempted: boolean; http_status?: number; response?: unknown };
+export type DirectorTrace = { attempted: boolean; http_status?: number; response?: unknown; recovered_from_event?: number };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const environment = (): Config => ({
   baseUrl: process.env.AGENTICORG_BASE_URL, apiKey: process.env.AGENTICORG_API_KEY,
@@ -32,16 +32,33 @@ export function redactAgenticOrg(value: unknown, config = environment(), depth =
 function problem(status: number, message: string): Error & { status: number } {
   return Object.assign(new Error(message), { status });
 }
+export function directorReviewPending(raw: unknown): boolean {
+  if (!raw || typeof raw !== "object") return false;
+  return ["hitl_triggered", "awaiting_approval"].includes(String((raw as Record<string, unknown>).status));
+}
+export function reusableDirectorDraft(
+  event: { inputSummary: string; timestamp: Date; outputJson: unknown },
+  current: { inputSummary: string; updatedAt: Date; inputHash: string },
+): unknown | null {
+  if (event.inputSummary !== current.inputSummary || event.timestamp < current.updatedAt ||
+    !event.outputJson || typeof event.outputJson !== "object") return null;
+  const audit = event.outputJson as Record<string, unknown>;
+  // Older audit entries contain only a summary. Recover them only when it
+  // contains the full input, not when it was truncated.
+  if (audit.input_fingerprint ? audit.input_fingerprint !== current.inputHash : current.inputSummary.length >= 1200) return null;
+  return directorReviewPending(audit.response) ? audit.response : null;
+}
 export function directorMessage(raw: unknown): AgentMessage {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw problem(502, "AgenticOrg returned an invalid Director response.");
   const result = raw as Record<string, unknown>;
   const status = String(result.status);
-  if (status === "hitl_triggered" || status === "awaiting_approval") {
-    throw problem(409, "Frames Director is waiting for human review in the AgenticOrg dashboard. No plan has been saved. Do not submit again while that run is awaiting review.");
-  }
+  const reviewDraft = directorReviewPending(raw);
   if (status === "budget_exceeded") throw problem(503, "Frames Director reached its AgenticOrg budget limit. Check the agent budget in the hackathon dashboard.");
-  if (status !== "completed") throw problem(502, `Frames Director did not complete (${status.slice(0, 50)}). No plan has been saved.`);
+  if (status !== "completed" && !reviewDraft) throw problem(502, `Frames Director did not complete (${status.slice(0, 50)}). No plan has been saved.`);
   if (result.error) throw problem(502, "AgenticOrg reported a Director error. No plan has been saved.");
+  if (reviewDraft && (result.output === null || result.output === undefined || result.output === "")) {
+    throw problem(409, "Frames Director is still reviewing this run and has not returned a draft yet. Check the run in AgenticOrg before retrying.");
+  }
   return { content: [{ type: "text", text: typeof result.output === "string" ? result.output : JSON.stringify(result.output ?? null) }] };
 }
 export async function runAgenticOrgDirector(

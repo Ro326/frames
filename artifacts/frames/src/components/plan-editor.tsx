@@ -15,7 +15,7 @@ const newShot = (): Shot => ({
   id: crypto.randomUUID(), section: 'Body', description: '', angle: '', movement: 'Static', type: 'B-roll', props: [], duration: 5, tip: '', approved: false,
 });
 
-export function PlanEditor({ project }: { project: Project }) {
+export function PlanEditor({ project, onApproved }: { project: Project; onApproved?: () => void }) {
   const qc = useQueryClient();
   const update = useUpdateProject();
   const approve = useApprovePlan();
@@ -40,7 +40,7 @@ export function PlanEditor({ project }: { project: Project }) {
       onError: (e) => setErr(errInfo(e).msg),
     });
   };
-  const lock = () => approve.mutate({ id: project.id }, { onSuccess: done, onError: (e) => setErr(errInfo(e).msg) });
+  const lock = () => approve.mutate({ id: project.id }, { onSuccess: (p) => { done(p); onApproved?.(); }, onError: (e) => setErr(errInfo(e).msg) });
   const busy = update.isPending || approve.isPending;
 
   return (
