@@ -17,7 +17,6 @@ function ProfileForm() {
   const save = useSaveProfile();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   useEffect(() => {
     if (user) {
       setName((n) => n || user.fullName || '');
@@ -26,7 +25,7 @@ function ProfileForm() {
   }, [user]);
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    save.mutate({ data: { name: name.trim(), email: email.trim(), phone: phone.trim() } }, {
+    save.mutate({ data: { name: name.trim(), email: email.trim() } }, {
       onSuccess: () => qc.invalidateQueries({ queryKey: getGetMeQueryKey() }),
     });
   };
@@ -37,7 +36,6 @@ function ProfileForm() {
       <p className="text-muted-foreground">One-time details so we can reach you. We verify your email.</p>
       <Field label="Name"><input data-testid="input-name" required maxLength={120} className={inputCls} value={name} onChange={(e) => setName(e.target.value)} /></Field>
       <Field label="Email"><input data-testid="input-email" type="email" required className={inputCls} value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-      <Field label="Phone"><input data-testid="input-phone" type="tel" required minLength={6} maxLength={30} className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
       {save.isError && <ErrorBox msg={errInfo(save.error).msg} />}
       <Btn type="submit" loading={save.isPending} className="w-full" data-testid="button-save-profile">Save and continue</Btn>
     </motion.form>

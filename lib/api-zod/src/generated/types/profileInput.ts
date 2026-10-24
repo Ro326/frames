@@ -17,5 +17,5 @@ export interface ProfileInput {
      * @minLength 6
      * @maxLength 30
      */
-  phone: string;
+  phone?: string;
 }

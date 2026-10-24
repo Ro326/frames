@@ -211,7 +211,7 @@ components:
         status: { type: string }
     ProfileInput:
       type: object
-      required: [name, email, phone]
+      required: [name, email]
       properties:
         name: { type: string, minLength: 1, maxLength: 120 }
         email: { type: string, format: email }

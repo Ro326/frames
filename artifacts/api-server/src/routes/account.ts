@@ -26,8 +26,11 @@ accountRouter.post("/me", async (req, res) => {
     item.emailAddress.toLowerCase() === data.email.toLowerCase() && item.verification?.status === "verified",
   );
   if (!email) fail(400, "Use your verified sign-in email address.");
-  const [user] = await db.insert(usersTable).values({ ...data, authId: userId })
-    .onConflictDoUpdate({ target: usersTable.authId, set: { name: data.name, phone: data.phone, email: email.emailAddress } })
+   const [user] = await db.insert(usersTable).values({ ...data, phone: data.phone ?? "", authId: userId })
+     .onConflictDoUpdate({ target: usersTable.authId, set: {
+       name: data.name, email: email.emailAddress,
+       ...(data.phone !== undefined ? { phone: data.phone } : {}),
+     } })
     .returning();
   res.json(SaveProfileResponse.parse({ ...user, createdAt: user!.createdAt.toISOString() }));
 });

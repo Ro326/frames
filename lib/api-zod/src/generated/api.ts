@@ -36,7 +36,7 @@ export const saveProfileBodyPhoneMax = 30;
 export const SaveProfileBody = zod.object({
   "name": zod.string().min(1).max(saveProfileBodyNameMax),
   "email": zod.email(),
-  "phone": zod.string().min(saveProfileBodyPhoneMin).max(saveProfileBodyPhoneMax)
+  "phone": zod.string().min(saveProfileBodyPhoneMin).max(saveProfileBodyPhoneMax).optional()
 })
 
 export const SaveProfileResponse = zod.object({
