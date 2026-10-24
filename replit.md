@@ -26,6 +26,7 @@ Mobile-first AI shoot director for creators filming on their phones.
 - OpenAPI source of truth: `lib/api-spec/openapi.yaml`.
 - Replit-managed Clerk authentication, with local creator profiles tied to verified Clerk identity.
 - Replit Anthropic integration for Director and Frame Checker.
+- Exact user-supplied system prompts live in `server/prompts.js`. Director responses are validated and mapped to the existing editable plan fields; malformed JSON or invalid response shapes get one retry, and each model attempt is audited independently.
 
 ## Setup still needed
 

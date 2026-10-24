@@ -13,12 +13,3 @@ export function aiClient() {
   });
 }
 
-export function parseAIJson(message: Anthropic.Message): unknown {
-  const text = message.content.filter((block) => block.type === "text").map((block) => block.text).join("");
-  const clean = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-  try {
-    return JSON.parse(clean);
-  } catch {
-    throw Object.assign(new Error("The director returned an invalid response. Please try again."), { status: 502 });
-  }
-}
