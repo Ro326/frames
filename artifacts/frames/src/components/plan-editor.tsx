@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import { useUpdateProject, useApprovePlan, getGetProjectQueryKey, getListProjectsQueryKey, type Project, type Shot } from '@workspace/api-client-react';
@@ -74,12 +75,27 @@ export function PlanEditor({ project, onApproved }: { project: Project; onApprov
       {!locked && <Btn variant="line" className="w-full" onClick={() => { setShots((s) => [...s, newShot()]); setDirty(true); }} data-testid="button-add-shot"><Plus size={18} /> Add shot</Btn>}
       <Field label="Voiceover script"><textarea disabled={locked} rows={6} maxLength={15000} className={inputCls + ' py-3'} value={voice} onChange={(e) => { setVoice(e.target.value); setDirty(true); }} data-testid="input-voiceover" /></Field>
       <Field label="Checklist (one per line)"><textarea disabled={locked} rows={5} className={inputCls + ' py-3'} value={check} onChange={(e) => { setCheck(e.target.value); setDirty(true); }} data-testid="input-checklist" /></Field>
-      {err && <ErrorBox msg={err} />}
-      {!locked && (
-        <div className="sticky bottom-3 z-30 flex flex-col gap-2 rounded-md border border-border bg-background/95 p-3 backdrop-blur sm:flex-row">
-          <Btn variant="ghost" className="flex-1" loading={update.isPending} disabled={!dirty || !valid || busy} onClick={() => save()} data-testid="button-save-plan">{saved && !dirty ? 'Saved' : 'Save plan'}</Btn>
-          <Btn className="flex-1" loading={approve.isPending} disabled={!valid || busy} onClick={() => (dirty ? save(lock) : lock())} data-testid="button-approve-plan"><Lock size={16} /> Approve and start shooting</Btn>
-        </div>
+      <div className="h-64" aria-hidden="true" />
+      {typeof document !== 'undefined' && createPortal(
+        <section aria-label="Plan actions" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur" data-testid="plan-action-bar">
+          <div className="mx-auto max-w-5xl space-y-2 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            {err && <div className="max-h-28 overflow-y-auto"><ErrorBox msg={err} /></div>}
+            {locked ? (
+              <>
+                <p className="text-xs text-muted-foreground">Your plan is already approved.</p>
+                <Btn className="w-full" onClick={onApproved} data-testid="button-continue-shooting">Continue shooting</Btn>
+              </>
+            ) : (
+              <>
+                {!valid && <p role="status" className="text-xs text-muted-foreground">{shots.length ? 'Each shot needs a description and a duration from 1 to 600 seconds.' : 'Add at least one shot before approving your plan.'}</p>}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[auto_1fr]">
+                  <Btn variant="ghost" loading={update.isPending} disabled={!dirty || !valid || busy} onClick={() => save()} data-testid="button-save-plan">{saved && !dirty ? 'Saved' : 'Save plan'}</Btn>
+                  <Btn loading={approve.isPending} disabled={!valid || busy} onClick={() => (dirty ? save(lock) : lock())} data-testid="button-approve-plan"><Lock size={16} /> Approve and start shooting</Btn>
+                </div>
+              </>
+            )}
+          </div>
+        </section>, document.body,
       )}
     </div>
   );
