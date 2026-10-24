@@ -8,7 +8,7 @@ const steps = [
   { n: '01', t: 'Brief', d: 'Say what you are making, how long, and the vibe. Two sentences is enough.', i: Clapperboard },
   { n: '02', t: 'Plan', d: 'A shot list with angles, movement, props and a tip for each. Edit every line, then lock it.', i: ListChecks },
   { n: '03', t: 'Shoot', d: 'Film each shot. The director looks at three frames from your clip and tells you: go ahead, or fix this.', i: ScanEye },
-  { n: '04', t: 'Edit-ready', d: 'Every shot approved, then one ZIP: ordered clips, shot sheet, voiceover script.', i: Package },
+  { n: '04', t: 'Ready to share', d: 'Join approved clips into one finished MP4. Keep the original clips and editing notes as an optional ZIP.', i: Package },
 ];
 
 const rise = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0 } };
@@ -73,7 +73,7 @@ export default function Landing() {
         </div>
         <div className="self-end space-y-4 text-muted-foreground">
           <p>The director never sees your video. In the browser, FRAMES grabs three still frames from each clip, 20%, 50% and 80% in, scaled small, and sends only those stills for review.</p>
-          <p>The footage itself is stored on this device. When every shot is approved, the ZIP is built right here, offline from our servers.</p>
+          <p>The footage itself is stored on this device. When every shot is approved, your finished MP4 and optional editing ZIP are built right here, without uploading the footage.</p>
           <p className="font-mono text-xs tracking-[0.04em] text-primary">Clear the browser data and the clips go with it. Export before you do.</p>
         </div>
       </section>

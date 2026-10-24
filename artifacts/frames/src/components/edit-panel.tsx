@@ -5,6 +5,7 @@ import type { Project } from '@workspace/api-client-react';
 import { Btn, ErrorBox } from '@/components/kit';
 import { getClip } from '@/lib/clips';
 import { slugify } from '@/lib/util';
+import { Mp4Export } from '@/components/mp4-export';
 
 function extOf(name: string, type: string) {
   const m = /\.([a-z0-9]{2,5})$/i.exec(name);
@@ -49,7 +50,7 @@ export function EditPanel({ project }: { project: Project }) {
     <div className="rounded-md border border-dashed border-white/20 p-10 text-center" data-testid="edit-locked">
       <Lock className="mx-auto mb-3 text-muted-foreground" />
       <h3 className="font-display text-3xl font-normal">Edit table locked</h3>
-      <p className="mt-2 text-muted-foreground">Approve every shot to unlock the edit table and the ZIP. {shots.filter((s) => s.approved).length}/{shots.length} done.</p>
+      <p className="mt-2 text-muted-foreground">Approve every shot to unlock the finished MP4 and optional editing ZIP. {shots.filter((s) => s.approved).length}/{shots.length} done.</p>
     </div>
   );
   const exportZip = async () => {
@@ -83,16 +84,17 @@ export function EditPanel({ project }: { project: Project }) {
   };
   return (
     <div className="space-y-6">
+      <Mp4Export key={`${project.id}:${project.approvedAt ?? ''}`} project={project} />
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full min-w-[520px] text-left text-sm" data-testid="table-edit">
           <thead className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground"><tr>{['#', 'Section', 'Shot', 'Dur', 'Clip'].map((h) => <th key={h} className="p-3">{h}</th>)}</tr></thead>
           <tbody>{shots.map((s, i) => <tr key={s.id} className="border-t border-border"><td className="p-3 font-mono text-primary">{pad(i + 1)}</td><td className="p-3">{s.section}</td><td className="p-3">{s.description}</td><td className="p-3 font-mono">{s.duration}s</td><td className="p-3 text-muted-foreground">{s.clipName ?? '-'}</td></tr>)}</tbody>
         </table>
       </div>
-      <p className="text-sm text-muted-foreground">The ZIP is assembled on this device from your locally stored clips. Nothing is uploaded.</p>
+      <p className="text-sm text-muted-foreground">Prefer to edit elsewhere? Download the original clips, shot sheet and voiceover script as a ZIP. This optional editing pack is assembled on your device; nothing is uploaded.</p>
       {err && <ErrorBox msg={err} onRetry={exportZip} />}
       {ok && <p className="text-sm text-emerald-400" data-testid="text-zip-done">ZIP built. Check your downloads.</p>}
-      <Btn loading={busy} onClick={exportZip} className="w-full" data-testid="button-download-zip"><Download size={18} /> Download edit-ready ZIP</Btn>
+      <Btn variant="line" loading={busy} onClick={exportZip} className="w-full" data-testid="button-download-zip"><Download size={18} /> Download editing pack ZIP (optional)</Btn>
       <Voiceover project={project} />
     </div>
   );

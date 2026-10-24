@@ -6,6 +6,7 @@ Mobile-first AI shoot director for creators filming on their phones.
 
 - Signup collects name and verified email with creation timestamp. Onboarding must not require or ask for a phone number.
 - Creators write a brief or manually build a plan, edit shots, approve, upload footage for AI checks, and export an editing pack.
+- Finished MP4 is the primary export; keep the original-clip ZIP as an optional editing pack. Start with basic cuts and original audio. Camera overlays and gyro assistance are deferred until the user requests them.
 - Creators may not know filming jargon such as pan or dolly zoom. Explain shot angles and movements visually with lightweight animated diagrams and plain-language instructions, with an easier option for advanced moves.
 - Real user and agent-event records are evidence for judges. Never seed fake users, approvals, or agent events.
 - Brand: FRAMES, a simple black-and-white palette with subtle blue design accents, sleek regular/light typography (not bold), film-frame logo, large tap targets.
@@ -38,7 +39,7 @@ Mobile-first AI shoot director for creators filming on their phones.
 
 ## Architecture decisions
 
-- Original clips remain in browser IndexedDB for local ZIP export. Only three resized JPEG samples are sent for analysis, and image bytes are not persisted in the database.
+- Original clips remain in browser IndexedDB for local MP4 rendering and ZIP export. Only three resized JPEG samples are sent for analysis, and image bytes are not persisted in the database.
 - User identity and ownership come from Clerk, never request-supplied user IDs.
 - Plan edits invalidate existing footage approvals to avoid exporting footage against a different plan.
 - Audit records contain summaries and structured outputs, not raw video/image bytes or credentials.
