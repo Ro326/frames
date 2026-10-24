@@ -49,7 +49,7 @@ accountRouter.get("/status", (_req, res) => {
     voiceover: !!process.env.ELEVENLABS_API_KEY,
     payments: pineReady(),
     paymentMode: "uat",
-    coverage: !!process.env.AGENTICORG_API_KEY,
+    coverage: !!(process.env.AGENTICORG_API_KEY && process.env.AGENTICORG_BASE_URL && process.env.AGENTICORG_AGENT_ID),
     admin: !!process.env.ADMIN_PASSWORD,
   });
 });

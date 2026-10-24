@@ -2,15 +2,15 @@ import { db, projectsTable, agentEventsTable, eq, and, type StoredProject } from
 import { GetProjectResponse } from "@workspace/api-zod";
 import { localCoverage, parseCoverageResponse, type Coverage } from "./coverage-model";
 
-const BASE = "https://app.agenticorg.ai";
-const NAME = "Frames Coverage Producer";
-let cachedAgent: { agent_type: string; company_id: string; expires: number } | undefined;
 type HttpTrace = { path: string; status: number; request: unknown; response?: unknown };
 function auditResponse(value: unknown, depth = 0): unknown {
   if (depth > 6) return "[truncated]";
   if (typeof value === "string") {
-    const key = process.env.AGENTICORG_API_KEY;
-    return (key ? value.replaceAll(key, "[redacted]") : value).slice(0, 12000);
+    let text = value;
+    for (const key of [process.env.AGENTICORG_API_KEY, process.env.AGENTICORG_AGENT_ID]) {
+      if (key) text = text.replaceAll(key, "[redacted]");
+    }
+    return text.slice(0, 12000);
   }
   if (Array.isArray(value)) return value.slice(0, 100).map((item) => auditResponse(item, depth + 1));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value)
@@ -39,12 +39,12 @@ export async function refreshCoverage(row: StoredProject): Promise<StoredProject
   const trace: HttpTrace[] = [];
   const signal = AbortSignal.timeout(30_000);
   const request = async (path: string, body?: unknown): Promise<Record<string, unknown>> => {
-    const call: HttpTrace = { path, status: 0, request: body ? auditResponse(body) : null };
+    const call: HttpTrace = { path: "/api/v1/agents/[redacted]/run", status: 0, request: body ? auditResponse(body) : null };
     trace.push(call);
-    const res = await fetch(`${BASE}${path}`, {
+    const res = await fetch(`${process.env.AGENTICORG_BASE_URL?.replace(/\/$/, "")}${path}`, {
       method: body ? "POST" : "GET",
       headers: { Authorization: `Bearer ${process.env.AGENTICORG_API_KEY}`, "Content-Type": "application/json", Accept: "application/json" },
-      ...(body ? { body: JSON.stringify(body) } : {}), signal,
+      ...(body ? { body: JSON.stringify(body) } : {}), signal, redirect: "error",
     });
     call.status = res.status;
     const result: unknown = await res.json().catch(() => null);
@@ -55,41 +55,18 @@ export async function refreshCoverage(row: StoredProject): Promise<StoredProject
   };
   try {
     if (!process.env.AGENTICORG_API_KEY) throw new Error("AGENTICORG_API_KEY is not configured.");
-    let agent = process.env.AGENTICORG_AGENT_TYPE && process.env.AGENTICORG_COMPANY_ID
-      ? { agent_type: process.env.AGENTICORG_AGENT_TYPE, company_id: process.env.AGENTICORG_COMPANY_ID }
-      : cachedAgent && cachedAgent.expires > Date.now() ? cachedAgent : undefined;
-    if (!agent) {
-      // Published A2A API dispatches by agent_type and requires company_id.
-      // Resolve the exact named tenant agent instead of guessing either value.
-      const found: Record<string, unknown>[] = [];
-      for (let page = 1; page <= 5; page++) {
-        const data = await request(`/api/v1/agents?page=${page}&per_page=100`);
-        const rows = data.agents ?? data.items ?? data.data;
-        if (!Array.isArray(rows)) throw new Error("AgenticOrg agent discovery returned an unsupported response.");
-        found.push(...rows.filter((item) => item && typeof item === "object" &&
-          (item as Record<string, unknown>).name === NAME) as Record<string, unknown>[]);
-        if (rows.length < 100) break;
-      }
-      const matches = found.filter((item) => !process.env.AGENTICORG_COMPANY_ID || item.company_id === process.env.AGENTICORG_COMPANY_ID);
-      if (matches.length !== 1 || typeof matches[0]!.agent_type !== "string" ||
-        typeof (process.env.AGENTICORG_COMPANY_ID || matches[0]!.company_id) !== "string") {
-        throw new Error("Could not uniquely resolve Frames Coverage Producer with its company. Set AGENTICORG_AGENT_TYPE and AGENTICORG_COMPANY_ID.");
-      }
-      agent = { agent_type: matches[0]!.agent_type as string, company_id: process.env.AGENTICORG_COMPANY_ID || matches[0]!.company_id as string };
-      cachedAgent = { ...agent, expires: Date.now() + 5 * 60_000 };
+    const base = new URL(process.env.AGENTICORG_BASE_URL || "");
+    if (base.protocol !== "https:" || base.username || base.password || base.pathname !== "/" || base.search || base.hash) {
+      throw new Error("AGENTICORG_BASE_URL must be an HTTPS origin.");
     }
-    response = await request("/api/v1/a2a/tasks", {
-      agent_type: agent.agent_type, company_id: agent.company_id, action: "process", inputs: input, context: { project_id: project.id, agent_name: NAME },
-      metadata: { source: "frames", project_id: project.id },
+    const agentId = process.env.AGENTICORG_AGENT_ID;
+    if (!agentId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(agentId)) {
+      throw new Error("AGENTICORG_AGENT_ID must be configured as a UUID.");
+    }
+    response = await request(`/api/v1/agents/${encodeURIComponent(agentId)}/run`, {
+      action: "process", inputs: { task: JSON.stringify(input) }, context: {},
     });
-    let task = response as Record<string, unknown>;
-    const taskId = task.task_id ?? task.id ?? task.run_id;
-    for (let tries = 0; ["running", "pending", "submitted", "working"].includes(String(task.status)) && tries < 4; tries++) {
-      if (typeof taskId !== "string") throw new Error("AgenticOrg returned no task identifier.");
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      task = await request(`/api/v1/a2a/tasks/${encodeURIComponent(taskId)}`);
-      response = task;
-    }
+    const task = response as Record<string, unknown>;
     if (["running", "pending", "submitted", "working", "failed", "error", "cancelled", "rejected", "awaiting_approval"].includes(String(task.status))) {
       throw new Error(`AgenticOrg task is ${String(task.status)}.`);
     }
