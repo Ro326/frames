@@ -47,9 +47,9 @@ const clerkAppearance = {
     borderRadius: '0.375rem',
   },
   elements: {
-    rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#0b0c0e] border border-white/15 rounded-md w-[440px] max-w-full overflow-hidden',
-    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
+    rootBox: '!w-full !min-w-0 !max-w-full flex justify-center',
+    cardBox: 'bg-[#0b0c0e] border border-white/15 rounded-md !w-full !min-w-0 !max-w-[440px] overflow-hidden',
+    card: '!w-full !min-w-0 !max-w-full !shadow-none !border-0 !bg-transparent !rounded-none',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
     headerTitle: { fontFamily: "'Outfit', sans-serif", fontWeight: 300, fontSize: '28px', color: '#F7F7F8', letterSpacing: '-0.01em' },
     headerSubtitle: { color: '#A5A9B1' },
@@ -73,7 +73,7 @@ function AuthFrame({ children, line }: { children: ReactNode; line: string }) {
   return (
     <div className="grain relative grid min-h-[100dvh] place-items-center overflow-hidden px-4 py-10">
       <div className="pointer-events-none absolute inset-y-0 left-6 hidden w-3 sm:block sprockets" style={{ height: '100%', backgroundImage: 'repeating-linear-gradient(180deg, hsl(var(--border)) 0 14px, transparent 14px 30px)', width: 8 }} />
-      <div className="relative z-10 flex w-full flex-col items-center gap-6">
+      <div className="relative z-10 flex min-w-0 w-full max-w-full flex-col items-center gap-6">
         <a href={basePath || '/'} data-testid="link-home"><Logo size={34} /></a>
         <p className="font-mono text-[11px] tracking-[0.08em] text-muted-foreground">{line}</p>
         {children}

@@ -31,7 +31,7 @@ export function Btn({ variant = 'solid', className = '', loading, children, ...p
     <button
       {...p}
       disabled={p.disabled || loading}
-      className={`tap inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-5 text-[15px] font-normal tracking-[0.02em] transition disabled:opacity-40 disabled:pointer-events-none ${V[variant]} ${className}`}
+      className={`tap inline-flex min-h-12 min-w-0 max-w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-center text-[15px] font-normal leading-snug tracking-[0.02em] transition [&>svg]:shrink-0 disabled:opacity-40 disabled:pointer-events-none ${V[variant]} ${className}`}
     >
       {loading && <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
       {children}

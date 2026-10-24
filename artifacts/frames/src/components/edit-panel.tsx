@@ -87,7 +87,17 @@ export function EditPanel({ project }: { project: Project }) {
     <div className="space-y-6">
       <UpgradeButton testId="button-edit-pro" />
       <Mp4Export key={`${project.id}:${project.approvedAt ?? ''}`} project={project} />
-      <div className="overflow-x-auto rounded-md border border-border">
+      <ol className="space-y-3 sm:hidden" aria-label="Clips in export order">
+        {shots.map((s, i) => <li key={s.id} className="min-w-0 rounded-md border border-border bg-card p-4">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-muted-foreground">
+            <span><span className="text-primary">{pad(i + 1)}</span> / {s.section}</span>
+            <span>{s.duration}s</span>
+          </div>
+          <p className="text-sm leading-relaxed">{s.description}</p>
+          <p className="mt-2 break-all text-xs text-muted-foreground">{s.clipName ?? 'No clip'}</p>
+        </li>)}
+      </ol>
+      <div className="hidden overflow-x-auto rounded-md border border-border sm:block">
         <table className="w-full min-w-[520px] text-left text-sm" data-testid="table-edit">
           <thead className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground"><tr>{['#', 'Section', 'Shot', 'Dur', 'Clip'].map((h) => <th key={h} className="p-3">{h}</th>)}</tr></thead>
           <tbody>{shots.map((s, i) => <tr key={s.id} className="border-t border-border"><td className="p-3 font-mono text-primary">{pad(i + 1)}</td><td className="p-3">{s.section}</td><td className="p-3">{s.description}</td><td className="p-3 font-mono">{s.duration}s</td><td className="p-3 text-muted-foreground">{s.clipName ?? '-'}</td></tr>)}</tbody>

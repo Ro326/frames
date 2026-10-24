@@ -51,7 +51,7 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
   const [brief, setBrief] = useState('');
   const [niche, setNiche] = useState<(typeof NICHES)[number]>('vlog/travel');
   const [len, setLen] = useState(60);
-  const [vibe, setVibe] = useState('');
+  const [vibe, setVibe] = useState('Natural');
   const [manual, setManual] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [phase, setPhase] = useState<'idle' | 'creating' | 'directing'>('idle');
@@ -59,6 +59,13 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (phase !== 'idle') return;
+    if (!valid) {
+      setErr(brief.trim().length < 5 ? 'Describe your shoot in at least 5 characters.'
+        : len < 10 || len > 600 || !Number.isFinite(len) ? 'Choose a video length between 10 and 600 seconds.'
+        : 'Enter a vibe, such as Natural, Calm or Energetic.');
+      return;
+    }
     setErr(null); setPhase('creating');
     create.mutate({ data: { brief: brief.trim(), niche, targetLength: len, vibe: vibe.trim(), manual } }, {
       onError: (er) => {
@@ -73,7 +80,8 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
           onSuccess: (d) => { qc.setQueryData(getGetProjectQueryKey(d.id), d); nav('/projects/' + d.id); },
           onError: (er) => {
             // project exists; open it so the user can retry directing there
-            setErr(errInfo(er).msg); setPhase('idle'); nav('/projects/' + p.id);
+            qc.setQueryData(['director-error', p.id], errInfo(er).msg);
+            setPhase('idle'); nav('/projects/' + p.id);
           },
         });
       },
@@ -105,7 +113,7 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
         <span className={`flex h-7 w-12 items-center rounded-full p-1 transition ${manual ? 'bg-primary' : 'bg-white/20'}`}><span className={`size-5 rounded-full bg-background transition-transform ${manual ? 'translate-x-5' : ''}`} /></span>
       </button>
       {err && <ErrorBox msg={err} />}
-      <Btn type="submit" disabled={!valid} loading={busy} className="w-full" data-testid="button-create-project">
+      <Btn type="submit" loading={busy} className="w-full" data-testid="button-create-project">
         {phase === 'creating' ? 'Opening the project' : phase === 'directing' ? 'Director is planning your shots' : manual ? <><PenLine size={18} /> Create blank plan</> : <><Sparkles size={18} /> Direct my shoot</>}
       </Btn>
     </form>
@@ -186,7 +194,7 @@ export default function Studio() {
                         <p className="truncate font-normal">{p.title}</p>
                         <p className="font-mono mt-1 text-[11px] tracking-[0.04em]r text-muted-foreground">{p.niche} / {fmtDur(p.targetLength)} / {p.shots.length} shots</p>
                       </div>
-                      <span className="flex items-center gap-2"><span className={`font-mono rounded-sm px-2 py-1 text-[10px] tracking-[0.04em] ${p.status === 'complete' ? 'bg-emerald-500/15 text-emerald-400' : p.status === 'shooting' ? 'bg-primary/15 text-primary' : 'bg-white/10 text-muted-foreground'}`}>{p.status}</span><ChevronRight size={18} className="transition group-hover:translate-x-1" /></span>
+                      <span className="flex shrink-0 items-center gap-2"><span className={`font-mono rounded-sm px-2 py-1 text-[10px] tracking-[0.04em] ${p.status === 'complete' ? 'bg-emerald-500/15 text-emerald-400' : p.status === 'shooting' ? 'bg-primary/15 text-primary' : 'bg-white/10 text-muted-foreground'}`}>{p.status}</span><ChevronRight size={18} className="transition group-hover:translate-x-1" /></span>
                     </Link>
                   </motion.li>
                 ))}

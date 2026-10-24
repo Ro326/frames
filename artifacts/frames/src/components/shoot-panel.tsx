@@ -84,7 +84,7 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
       {err && <div className="mt-3"><ErrorBox msg={err} onRetry={hasLocal ? retry : undefined} /></div>}
       {url && <video src={url} controls playsInline className="mt-3 max-h-80 w-full rounded-md bg-black" data-testid={'video-preview-' + index} />}
       <input ref={input} type="file" accept="video/*" capture="environment" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ''; }} data-testid={'input-clip-' + index} />
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:flex sm:flex-wrap">
         <Btn variant={hasLocal ? 'ghost' : 'solid'} disabled={busy} onClick={() => input.current?.click()} data-testid={'button-upload-' + index}>{hasLocal ? <><Upload size={16} /> Replace clip</> : <><Camera size={16} /> Film or upload</>}</Btn>
         {hasLocal && <Btn variant="ghost" onClick={preview} data-testid={'button-preview-' + index}><Eye size={16} /> {url ? 'Hide' : 'Preview'}</Btn>}
         {hasLocal && !shot.verdict && !busy && <Btn variant="line" onClick={retry} data-testid={'button-check-' + index}>Check with director</Btn>}
