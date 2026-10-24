@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Frames"
+description = "A mobile-first AI shoot director for creators: plan shots, check footage, and export an editor-ready pack."
+version = "1.0.0"
+id = "artifacts/frames"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24556
+
+[services.development]
+run = "pnpm --filter @workspace/frames run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/frames", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/frames/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24556"
+BASE_PATH = "/"
