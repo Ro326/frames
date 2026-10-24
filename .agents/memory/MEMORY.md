@@ -2,3 +2,4 @@
 - [Browser video rendering](browser-video-rendering.md) — validate FFmpeg WASM probe reports; a sentinel probe status can reject readable sources.
 - [Mobile workflow verification](mobile-layout-verification.md) — check real Studio/Plan/Shoot/Edit layouts; page-level clipping can hide unreachable content.
 - [AgenticOrg run permissions](agenticorg-run-permissions.md) — a details-GET rejection does not invalidate a run-only key; distinguish HTTP success from pending human review.
+- [Paid-run ambiguity](paid-run-ambiguity.md) — timeouts and restarts must not expire unresolved Director dispatches into another paid run.

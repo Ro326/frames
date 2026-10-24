@@ -109,3 +109,46 @@ test("audit outputs redact credentials and secret UUID values", () => {
   const value = redactAgenticOrg({ agent_id: config.agentId, token: "sensitive", output: `${config.apiKey} ${config.agentId}`, confidence: 0.9 }, config);
   assert.deepEqual(value, { output: "[redacted] [redacted]", confidence: 0.9 });
 });
+test("transport timeouts remain unconfirmed and never retry a paid call", async () => {
+  const trace: DirectorTrace = { attempted: false };
+  let calls = 0;
+  const events: unknown[] = [];
+  await assert.rejects(requestAgentJson({
+    call: () => runAgenticOrgDirector(input, "Prompt", trace, config, (async () => {
+      calls++;
+      throw new DOMException("Timed out", "TimeoutError");
+    }) as typeof fetch),
+    validate: (output) => directorOutputSchema.parse(output),
+    audit: async (event) => { events.push(event); },
+  }), /may still be processing/);
+  assert.equal(calls, 1);
+  assert.equal(events.length, 1);
+  assert.equal(trace.execution_unconfirmed, true);
+});
+for (const status of ["running", "pending", "awaiting_approval", "hitl_triggered"]) {
+  test(`${status} without usable output leaves dispatch unconfirmed`, async () => {
+    const trace: DirectorTrace = { attempted: false };
+    await assert.rejects(runAgenticOrgDirector(input, "Prompt", trace, config,
+      (async () => Response.json({ status, output: null })) as typeof fetch));
+    assert.equal(trace.execution_unconfirmed, true);
+    assert.equal((trace.response as { status: string }).status, status);
+  });
+}
+test("malformed and non-success HTTP responses do not prove execution finished", async () => {
+  for (const response of [
+    new Response("not JSON"), Response.json({ status: "completed", output: plan }, { status: 502 }),
+  ]) {
+    const trace: DirectorTrace = { attempted: false };
+    await assert.rejects(runAgenticOrgDirector(input, "Prompt", trace, config, (async () => response) as typeof fetch));
+    assert.equal(trace.execution_unconfirmed, true);
+  }
+});
+test("confirmed terminal and review-draft responses keep their real provider status", async () => {
+  for (const status of ["completed", "failed", "budget_exceeded", "hitl_triggered", "awaiting_approval"]) {
+    const trace: DirectorTrace = { attempted: false };
+    await runAgenticOrgDirector(input, "Prompt", trace, config,
+      (async () => Response.json({ status, output: plan })) as typeof fetch).catch(() => {});
+    assert.equal(trace.execution_unconfirmed, false);
+    assert.equal((trace.response as { status: string }).status, status);
+  }
+});

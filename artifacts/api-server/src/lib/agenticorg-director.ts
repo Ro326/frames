@@ -1,7 +1,13 @@
 import type { AgentMessage } from "./json-agent";
 
 type Config = { baseUrl?: string; apiKey?: string; agentId?: string };
-export type DirectorTrace = { attempted: boolean; http_status?: number; response?: unknown; recovered_from_event?: number };
+export type DirectorTrace = {
+  attempted: boolean;
+  http_status?: number;
+  response?: unknown;
+  recovered_from_event?: number;
+  execution_unconfirmed?: boolean;
+};
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const environment = (): Config => ({
   baseUrl: process.env.AGENTICORG_BASE_URL, apiKey: process.env.AGENTICORG_API_KEY,
@@ -74,6 +80,8 @@ export async function runAgenticOrgDirector(
     response_format: "Return ONLY the JSON object requested in instructions. No markdown or extra commentary.",
   }) }, context: {} };
   trace.attempted = true;
+  // Once dispatched, a network/HTTP/JSON failure does not prove the run stopped.
+  trace.execution_unconfirmed = true;
   let response: Response;
   try {
     response = await fetcher(`${new URL(config.baseUrl!).origin}/api/v1/agents/${encodeURIComponent(config.agentId!)}/run`, {
@@ -86,6 +94,13 @@ export async function runAgenticOrgDirector(
   trace.http_status = response.status;
   const raw: unknown = await response.json().catch(() => null);
   trace.response = redactAgenticOrg(raw, config);
+  const status = raw && typeof raw === "object" ? String((raw as Record<string, unknown>).status) : "";
+  if ((response.ok && ["completed", "failed", "budget_exceeded"].includes(status)) ||
+    response.status === 401 || response.status === 403) trace.execution_unconfirmed = false;
+  // A valid review draft is recoverable locally, but upstream review remains pending.
+  if (response.ok && directorReviewPending(raw)) {
+    try { directorMessage(raw); trace.execution_unconfirmed = false; } catch { /* Still pending without a draft. */ }
+  }
   if (response.status === 401 || response.status === 403) throw problem(503, "AgenticOrg rejected Director execution. Check the hackathon key and its agents:run permission.");
   if (!response.ok) throw problem(502, `AgenticOrg Director returned HTTP ${response.status}. No plan has been saved.`);
   return directorMessage(raw);
