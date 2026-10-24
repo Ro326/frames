@@ -16,7 +16,7 @@ export const HealthCheckResponse = zod.object({
 export const GetMeResponse = zod.object({
   "authenticated": zod.boolean(),
   "user": zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string(),
@@ -35,12 +35,12 @@ export const saveProfileBodyPhoneMax = 30;
 
 export const SaveProfileBody = zod.object({
   "name": zod.string().min(1).max(saveProfileBodyNameMax),
-  "email": zod.string().email(),
+  "email": zod.email(),
   "phone": zod.string().min(saveProfileBodyPhoneMin).max(saveProfileBodyPhoneMax)
 })
 
 export const SaveProfileResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string(),
@@ -59,11 +59,11 @@ export const listProjectsResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const ListProjectsResponseItem = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -107,7 +107,7 @@ export const createProjectBodyVibeMax = 120;
 export const CreateProjectBody = zod.object({
   "brief": zod.string().min(createProjectBodyBriefMin).max(createProjectBodyBriefMax),
   "niche": zod.enum(['vlog/travel', 'food', 'fitness', 'product', 'event', 'other']),
-  "targetLength": zod.number().int().min(createProjectBodyTargetLengthMin).max(createProjectBodyTargetLengthMax),
+  "targetLength": zod.int().min(createProjectBodyTargetLengthMin).max(createProjectBodyTargetLengthMax),
   "vibe": zod.string().min(1).max(createProjectBodyVibeMax),
   "manual": zod.boolean()
 })
@@ -122,11 +122,11 @@ export const createProjectResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const CreateProjectResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -170,11 +170,11 @@ export const getProjectResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const GetProjectResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -255,11 +255,11 @@ export const updateProjectResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const UpdateProjectResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -303,11 +303,11 @@ export const directProjectResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const DirectProjectResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -351,11 +351,11 @@ export const approvePlanResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const ApprovePlanResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -414,11 +414,11 @@ export const checkFramesResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const CheckFramesResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -467,11 +467,11 @@ export const decideShotResponseShotsItemVerdictConfidenceMax = 1;
 
 
 export const DecideShotResponse = zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "title": zod.string(),
   "brief": zod.string(),
   "niche": zod.string(),
-  "targetLength": zod.number().int(),
+  "targetLength": zod.int(),
   "vibe": zod.string(),
   "manual": zod.boolean(),
   "shots": zod.array(zod.object({
@@ -509,8 +509,8 @@ export const GenerateVoiceoverResponse = zod.unknown()
 
 
 export const GetActivityResponseItem = zod.object({
-  "id": zod.number().int(),
-  "userId": zod.number().int(),
+  "id": zod.int(),
+  "userId": zod.int(),
   "agentName": zod.string(),
   "inputSummary": zod.string(),
   "outputJson": zod.record(zod.string(), zod.unknown()),
@@ -543,11 +543,11 @@ export const PaymentCallbackResponse = zod.object({
 
 
 export const GetAdminResponse = zod.object({
-  "userCount": zod.number().int(),
-  "projectCount": zod.number().int(),
-  "eventCount": zod.number().int(),
+  "userCount": zod.int(),
+  "projectCount": zod.int(),
+  "eventCount": zod.int(),
   "users": zod.array(zod.object({
-  "id": zod.number().int(),
+  "id": zod.int(),
   "name": zod.string(),
   "email": zod.string(),
   "phone": zod.string(),
@@ -555,8 +555,8 @@ export const GetAdminResponse = zod.object({
   "createdAt": zod.string()
 })),
   "events": zod.array(zod.object({
-  "id": zod.number().int(),
-  "userId": zod.number().int(),
+  "id": zod.int(),
+  "userId": zod.int(),
   "agentName": zod.string(),
   "inputSummary": zod.string(),
   "outputJson": zod.record(zod.string(), zod.unknown()),
