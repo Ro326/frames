@@ -1,36 +1,342 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: API specification
+  version: 1.0.0
+  description: Frames shoot director
 servers:
   - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /me:
+    get:
+      operationId: getMe
+      responses:
+        "200":
+          description: Current profile or null
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Session" }
+    post:
+      operationId: saveProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileInput" }
+      responses:
+        "200":
+          description: Saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+  /projects:
+    get:
+      operationId: listProjects
+      responses:
+        "200":
+          description: Projects
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/Project" }
+    post:
+      operationId: createProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BriefInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    get:
+      operationId: getProject
+      responses:
+        "200":
+          description: Project
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+    patch:
+      operationId: updateProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlanInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}/direct:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      operationId: directProject
+      responses:
+        "200":
+          description: AI plan
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}/approve:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      operationId: approvePlan
+      responses:
+        "200":
+          description: Approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}/check:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      operationId: checkFrames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FrameInput" }
+      responses:
+        "200":
+          description: Checked project
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}/decision:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      operationId: decideShot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DecisionInput" }
+      responses:
+        "200":
+          description: Decision saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Project" }
+  /projects/{id}/voiceover:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: integer } }
+    post:
+      operationId: generateVoiceover
+      responses:
+        "200":
+          description: MP3 audio
+          content:
+            audio/mpeg:
+              schema: { type: string, format: binary }
+  /activity:
+    get:
+      operationId: getActivity
+      responses:
+        "200":
+          description: Own recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AgentEvent" }
+  /status:
+    get:
+      operationId: getServiceStatus
+      responses:
+        "200":
+          description: Service availability
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ServiceStatus" }
+  /pay:
+    post:
+      operationId: createPayment
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentLink" }
+  /pay/callback:
+    post:
+      operationId: paymentCallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentNotice" }
+      responses:
+        "200":
+          description: Payment recorded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /admin:
+    get:
+      operationId: getAdmin
+      responses:
+        "200":
+          description: Password-protected report using Basic authorization
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AdminReport" }
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+    ProfileInput:
+      type: object
+      required: [name, email, phone]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        email: { type: string, format: email }
+        phone: { type: string, minLength: 6, maxLength: 30 }
+    User:
+      type: object
+      required: [id, name, email, phone, pro, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        pro: { type: boolean }
+        createdAt: { type: string }
+    Session:
+      type: object
+      required: [authenticated]
+      properties:
+        authenticated: { type: boolean }
+        user: { $ref: "#/components/schemas/User" }
+    BriefInput:
+      type: object
+      required: [brief, niche, targetLength, vibe, manual]
+      properties:
+        brief: { type: string, minLength: 5, maxLength: 4000 }
+        niche: { type: string, enum: [vlog/travel, food, fitness, product, event, other] }
+        targetLength: { type: integer, minimum: 10, maximum: 600 }
+        vibe: { type: string, minLength: 1, maxLength: 120 }
+        manual: { type: boolean }
+    Verdict:
+      type: object
+      required: [match, confidence, verdict, fix]
+      properties:
+        match: { type: boolean }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        verdict: { type: string }
+        fix: { type: string }
+    Shot:
+      type: object
+      required: [id, section, description, angle, movement, type, props, duration, tip, approved]
+      properties:
+        id: { type: string }
+        section: { type: string, enum: [Intro, Body, Outro] }
+        description: { type: string, minLength: 1, maxLength: 2000 }
+        angle: { type: string }
+        movement: { type: string }
+        type: { type: string, enum: [A-roll, B-roll] }
+        props: { type: array, items: { type: string } }
+        duration: { type: number, minimum: 1, maximum: 600 }
+        tip: { type: string }
+        approved: { type: boolean }
+        verdict: { $ref: "#/components/schemas/Verdict" }
+        clipName: { type: string }
+    PlanInput:
+      type: object
+      required: [shots, voiceover, checklist]
+      properties:
+        shots: { type: array, maxItems: 50, items: { $ref: "#/components/schemas/Shot" } }
+        voiceover: { type: string, maxLength: 15000 }
+        checklist: { type: array, items: { type: string } }
+    Project:
+      type: object
+      required: [id, title, brief, niche, targetLength, vibe, manual, shots, voiceover, checklist, status, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        brief: { type: string }
+        niche: { type: string }
+        targetLength: { type: integer }
+        vibe: { type: string }
+        manual: { type: boolean }
+        shots: { type: array, items: { $ref: "#/components/schemas/Shot" } }
+        voiceover: { type: string }
+        checklist: { type: array, items: { type: string } }
+        status: { type: string, enum: [draft, planned, shooting, complete] }
+        approvedAt: { type: [string, "null"] }
+        createdAt: { type: string }
+    FrameInput:
+      type: object
+      required: [shotId, frames, clipName]
+      properties:
+        shotId: { type: string }
+        frames: { type: array, minItems: 3, maxItems: 3, items: { type: string, maxLength: 700000 } }
+        clipName: { type: string, maxLength: 250 }
+    DecisionInput:
+      type: object
+      required: [shotId, decision]
+      properties:
+        shotId: { type: string }
+        decision: { type: string, enum: [retake, override] }
+    AgentEvent:
+      type: object
+      required: [id, userId, agentName, inputSummary, outputJson, humanDecision, timestamp]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        agentName: { type: string }
+        inputSummary: { type: string }
+        outputJson: { type: object, additionalProperties: true }
+        humanDecision: { type: [string, "null"] }
+        timestamp: { type: string }
+    ServiceStatus:
+      type: object
+      required: [ai, voiceover, payments, admin]
+      properties:
+        ai: { type: boolean }
+        voiceover: { type: boolean }
+        payments: { type: boolean }
+        admin: { type: boolean }
+    PaymentLink:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+    PaymentNotice:
+      type: object
+      required: [orderId]
+      properties:
+        orderId: { type: string }
+    AdminReport:
+      type: object
+      required: [userCount, projectCount, eventCount, users, events]
+      properties:
+        userCount: { type: integer }
+        projectCount: { type: integer }
+        eventCount: { type: integer }
+        users: { type: array, items: { $ref: "#/components/schemas/User" } }
+        events: { type: array, items: { $ref: "#/components/schemas/AgentEvent" } }

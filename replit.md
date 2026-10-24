@@ -1,45 +1,50 @@
-# [Project name]
+# Frames
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Mobile-first AI shoot director for creators filming on their phones.
+
+## Product requirements
+
+- Signup collects name, verified email, and phone with creation timestamp.
+- Creators write a brief or manually build a plan, edit shots, approve, upload footage for AI checks, and export an editing pack.
+- Real user and agent-event records are evidence for judges. Never seed fake users, approvals, or agent events.
+- Brand: FRAMES, black, white, amber #F5A524, cinematic, film-frame logo, large tap targets.
+- Free includes one project; Pro is unlimited at ₹49 through Pine Labs.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/api-server run dev` — managed API service.
+- `pnpm --filter @workspace/frames run dev` — managed frontend at `/`.
+- `pnpm run typecheck` — type checks.
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate contracts.
+- `pnpm --filter @workspace/db run push` — development schema changes.
 
-## Stack
+## Stack and locations
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- React + Vite frontend in `artifacts/frames`.
+- Express API in `artifacts/api-server`, mounted at `/api`.
+- PostgreSQL + Drizzle tables in `lib/db/src/schema`.
+- OpenAPI source of truth: `lib/api-spec/openapi.yaml`.
+- Replit-managed Clerk authentication, with local creator profiles tied to verified Clerk identity.
+- Replit Anthropic integration for Director and Frame Checker.
 
-## Where things live
+## Setup still needed
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `ADMIN_PASSWORD` enables the password-protected admin report.
+- ElevenLabs connection or `ELEVENLABS_API_KEY` enables generated MP3 voiceovers. Optional `ELEVENLABS_VOICE_ID` selects the voice.
+- The user will supply Pine Labs product docs and merchant configuration. Payment routes intentionally return setup-required errors until a documented provider adapter and verified callback are implemented. Never grant Pro from an unverified callback.
+- Public publishing is initiated by the user through Publish; no public URL exists until that succeeds.
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Original clips remain in browser IndexedDB for local ZIP export. Only three resized JPEG samples are sent for analysis, and image bytes are not persisted in the database.
+- User identity and ownership come from Clerk, never request-supplied user IDs.
+- Plan edits invalidate existing footage approvals to avoid exporting footage against a different plan.
+- Audit records contain summaries and structured outputs, not raw video/image bytes or credentials.
+- Free-project creation uses a per-user database lock to prevent concurrent-request limit bypass.
+- AI writes use optimistic concurrency so a slow response cannot overwrite newer work.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Use SQL operators exported from `@workspace/db` with its tables. Multiple installed Drizzle peer instances otherwise yield incompatible nominal types.
+- Never change `Api` in the OpenAPI title.
+- Restart existing artifact workflows; do not create duplicate workflows.
