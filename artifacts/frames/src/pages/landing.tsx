@@ -82,8 +82,8 @@ export default function Landing() {
         <div className="grid gap-px bg-border md:grid-cols-2">
           <div className="bg-background p-8">
             <p className="font-mono text-xs tracking-[0.04em] text-muted-foreground">Free</p>
-            <p className="font-display mt-2 text-4xl font-normal">1 project</p>
-            <p className="mt-3 text-muted-foreground">The full workflow, start to ZIP, on one shoot.</p>
+            <p className="font-display mt-2 text-4xl font-normal">5 free tries</p>
+            <p className="mt-3 text-muted-foreground">One project per try. The full workflow, start to ZIP, for your first five shoots. Upgrade after that.</p>
           </div>
           <div className="bg-card p-8">
             <p className="font-mono text-xs tracking-[0.04em] text-primary">Frames Pro</p>

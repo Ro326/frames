@@ -3,6 +3,7 @@ import { db, usersTable, projectsTable, agentEventsTable } from "@workspace/db";
 import { desc, eq } from "@workspace/db";
 import { CreateProjectBody, UpdateProjectBody, ListProjectsResponse } from "@workspace/api-zod";
 import { currentUser, ownedProject, projectResponse, fail } from "../lib/frames";
+import { FREE_PROJECT_LIMIT, canCreateProject } from "../lib/usage";
 
 export const projectsRouter = Router();
 
@@ -19,8 +20,8 @@ projectsRouter.post("/projects", async (req, res) => {
   // Lock per user so concurrent requests cannot bypass the free-project limit.
   const row = await db.transaction(async (tx) => {
     const [locked] = await tx.select().from(usersTable).where(eq(usersTable.id, user.id)).for("update");
-    const existing = await tx.select({ id: projectsTable.id }).from(projectsTable).where(eq(projectsTable.userId, user.id)).limit(1);
-    if (!locked!.pro && existing.length) fail(403, "Your free plan includes one project. Upgrade to Frames Pro for unlimited projects.");
+    const existing = await tx.select({ id: projectsTable.id }).from(projectsTable).where(eq(projectsTable.userId, user.id)).limit(FREE_PROJECT_LIMIT);
+    if (!canCreateProject(locked!.pro, existing.length)) fail(403, "You've used all 5 free tries (one project per try). Upgrade to Frames Pro to create more projects.");
     const [created] = await tx.insert(projectsTable).values({
       ...input, userId: user.id, title: input.brief.trim().slice(0, 70),
     }).returning();

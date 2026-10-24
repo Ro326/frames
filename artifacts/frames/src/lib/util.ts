@@ -1,3 +1,5 @@
+export const FREE_PROJECT_LIMIT = 5;
+
 export function errInfo(e: unknown): { status?: number; msg: string } {
   const x = e as { status?: number; data?: { error?: string; message?: string } | string | null; message?: string };
   let msg = x?.message ?? 'Request failed';

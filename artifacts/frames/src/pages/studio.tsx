@@ -9,7 +9,7 @@ import {
   useGetServiceStatus, useCreatePayment, getGetMeQueryKey, getListProjectsQueryKey, getGetProjectQueryKey,
 } from '@workspace/api-client-react';
 import { Btn, ErrorBox, Field, FrameEmpty, Shell, Skel, inputCls } from '@/components/kit';
-import { NICHES, errInfo, fmtDur } from '@/lib/util';
+import { NICHES, errInfo, fmtDur, FREE_PROJECT_LIMIT } from '@/lib/util';
 
 function ProfileForm() {
   const { user } = useUser();
@@ -111,7 +111,7 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
   );
 }
 
-function ProCard({ highlight }: { highlight: boolean }) {
+function ProCard({ highlight, paymentsReady = false }: { highlight: boolean; paymentsReady?: boolean }) {
   const pay = useCreatePayment();
   const go = () => pay.mutate(undefined, { onSuccess: (r) => { window.location.href = r.url; } });
   const e = pay.isError ? errInfo(pay.error) : null;
@@ -119,9 +119,10 @@ function ProCard({ highlight }: { highlight: boolean }) {
     <div className={`rounded-md border p-5 transition ${highlight ? 'border-primary bg-primary/10' : 'border-border bg-card'}`} data-testid="card-pro">
       <p className="font-mono text-[11px] tracking-[0.08em] text-primary">Frames Pro</p>
       <p className="font-display mt-1 text-3xl font-normal">&#8377;49 / unlimited projects</p>
-      <p className="mt-1 text-sm text-muted-foreground">{highlight ? 'The free plan covers one project. Unlock more to keep shooting.' : 'Free includes one project.'}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{highlight ? 'You’ve used all 5 free tries. Upgrade to create more projects. Your existing projects stay accessible.' : 'Your first 5 projects are free. Upgrade after your fifth try for unlimited projects.'}</p>
+      {!paymentsReady && <p className="mt-3 text-sm text-muted-foreground" data-testid="text-payments-unavailable">Checkout is not available yet.</p>}
       {e && <div className="mt-3"><ErrorBox msg={e.status === 503 ? 'Payments are not set up yet. Setup is needed on the server before Pro can be purchased.' : e.msg} /></div>}
-      <Btn onClick={go} loading={pay.isPending} className="mt-4 w-full" data-testid="button-buy-pro">Get Frames Pro</Btn>
+      <Btn onClick={go} loading={pay.isPending} disabled={!paymentsReady} className="mt-4 w-full" data-testid="button-buy-pro">{paymentsReady ? 'Get Frames Pro' : 'Checkout coming soon'}</Btn>
     </div>
   );
 }
@@ -158,19 +159,21 @@ export default function Studio() {
   if (!me.data?.user) return <Shell><ProfileForm /></Shell>;
   const user = me.data.user;
   const list = projects.data ?? [];
+  const freeLimitReached = !user.pro && projects.isSuccess && list.length >= FREE_PROJECT_LIMIT;
   return (
     <Shell>
       <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="font-mono text-xs tracking-[0.08em] text-primary">Studio {user.pro && '/ Pro'}</p>
           <h1 className="font-display text-3xl font-normal leading-[1.1] sm:text-3xl" data-testid="text-greeting">{user.name.split(' ')[0]}'s slate</h1>
+          {!user.pro && projects.isSuccess && <p className="mt-2 text-sm text-muted-foreground" data-testid="text-free-tries">{Math.max(0, FREE_PROJECT_LIMIT - list.length)} of {FREE_PROJECT_LIMIT} free tries remaining · one project per try</p>}
         </div>
       </div>
       {status.data && !status.data.ai && <div className="mb-6"><ErrorBox msg="The AI director is not configured on this server. Manual plans still work." /></div>}
       <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
         <div className="space-y-4">
-          <h2 className="font-display text-3xl font-normal">New brief</h2>
-          <BriefForm onNeedPro={() => setNeedPro(true)} />
+          <h2 className="font-display text-3xl font-normal">{freeLimitReached ? 'Continue with Pro' : 'New brief'}</h2>
+          {freeLimitReached ? <ProCard highlight paymentsReady={status.data?.payments} /> : <BriefForm onNeedPro={() => setNeedPro(true)} />}
         </div>
         <div className="space-y-8">
           <section>
@@ -193,7 +196,7 @@ export default function Studio() {
               </ul>
             )}
           </section>
-          {!user.pro && <AnimatePresence><ProCard highlight={needPro} /></AnimatePresence>}
+          {!user.pro && !freeLimitReached && <AnimatePresence><ProCard highlight={needPro} paymentsReady={status.data?.payments} /></AnimatePresence>}
           <Activity />
         </div>
       </div>
