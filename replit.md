@@ -10,7 +10,7 @@ Mobile-first AI shoot director for creators filming on their phones.
 - Creators may not know filming jargon such as pan or dolly zoom. Explain shot angles and movements visually with lightweight animated diagrams and plain-language instructions, with an easier option for advanced moves.
 - Real user and agent-event records are evidence for judges. Never seed fake users, approvals, or agent events.
 - Brand: FRAMES, a simple black-and-white palette with subtle blue design accents, sleek regular/light typography (not bold), film-frame logo, large tap targets.
-- Free includes five tries, counted as five projects per account; the sixth project requires Pro. Existing projects remain accessible. Pro is unlimited at ₹49 through Pine Labs (checkout setup still required).
+- Free includes five tries, counted as five projects per account; the sixth project requires Pro. Existing projects remain accessible. Pro is unlimited at ₹49 through Pine Labs hosted checkout in UAT/test mode.
 
 ## Run & Operate
 
@@ -34,7 +34,11 @@ Mobile-first AI shoot director for creators filming on their phones.
 
 - `ADMIN_PASSWORD` enables the password-protected admin report.
 - ElevenLabs connection or `ELEVENLABS_API_KEY` enables generated MP3 voiceovers. Optional `ELEVENLABS_VOICE_ID` selects the voice.
-- The user will supply Pine Labs product docs and merchant configuration. Payment routes intentionally return setup-required errors until a documented provider adapter and verified callback are implemented. Never grant Pro from an unverified callback.
+- Pine Labs uses the official hosted checkout API at `https://pluraluat.v2.pinepg.in`: OAuth client credentials, `/api/checkout/v1/orders`, then server-side GET `/api/pay/v1/orders/{order_id}`. ₹49 is 4900 paise. `PINELABS_MERCHANT_ID`, `PINELABS_CLIENT_ID`, `PINELABS_CLIENT_SECRET` are required Secrets; `PINELABS_ENV=uat` is enforced. Never grant Pro from a redirect, notification status, or authorization alone: verify merchant, order/reference, currency, amount and processed payment server-side. The existing `users.pro` field is the Pro entitlement.
+- Return callbacks use `/api/pay/callback`; `/api/pay/webhook` accepts notifications and independently queries Pine Labs. Register the webhook URL with Pine Labs during onboarding. Browser success is shown only from the verified own-payment API. No callback-signature credential is assumed to be the OAuth client secret; callback bodies are not accepted as payment proof.
+- Coverage runs after every successful clip check (match or mismatch) and human override. AgenticOrg `POST https://app.agenticorg.ai/api/v1/a2a/tasks` needs `AGENTICORG_API_KEY`. Resolve the exact named tenant agent **Frames Coverage Producer** to its `agent_type` and `company_id`; optional `AGENTICORG_AGENT_TYPE` and `AGENTICORG_COMPANY_ID` explicitly configure those values if discovery is unavailable/ambiguous. Do not guess a company or agent type. Failure is logged and labeled local coverage; human approval always remains authoritative.
+- AgenticOrg receives plan text and all verdicts, never footage or frame images. Responses must account for every shot and preserve human approvals. Persist coverage only if the shot revision has not changed during the call; editing/regenerating a plan or retaking a shot invalidates old coverage.
+- Database additions for these integrations are the payments table and nullable project coverage. Apply the additive development schema to the production database through the normal migration process before publishing these changes; do not seed fake payment or agent-call evidence.
 - Public publishing is initiated by the user through Publish; no public URL exists until that succeeds.
 
 ## Architecture decisions

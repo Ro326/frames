@@ -5,7 +5,10 @@
  * Frames shoot director
  * OpenAPI spec version: 1.0.0
  */
+import type { PaymentNoticeData } from './paymentNoticeData';
 
 export interface PaymentNotice {
-  orderId: string;
+  orderId?: string;
+  order_id?: string;
+  data?: PaymentNoticeData;
 }

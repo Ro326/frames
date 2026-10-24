@@ -4,6 +4,7 @@ import { db, usersTable, agentEventsTable } from "@workspace/db";
 import { desc, eq } from "@workspace/db";
 import { SaveProfileBody, SaveProfileResponse, GetMeResponse, GetActivityResponse } from "@workspace/api-zod";
 import { currentUser, fail } from "../lib/frames";
+import { pineReady } from "../lib/pinelabs-client";
 
 export const accountRouter = Router();
 
@@ -46,7 +47,9 @@ accountRouter.get("/status", (_req, res) => {
   res.json({
     ai: !!process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
     voiceover: !!process.env.ELEVENLABS_API_KEY,
-    payments: false,
+    payments: pineReady(),
+    paymentMode: "uat",
+    coverage: !!process.env.AGENTICORG_API_KEY,
     admin: !!process.env.ADMIN_PASSWORD,
   });
 });

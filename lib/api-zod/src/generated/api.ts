@@ -56,6 +56,9 @@ export const listProjectsResponseShotsItemDurationMax = 600;
 export const listProjectsResponseShotsItemVerdictConfidenceMin = 0;
 export const listProjectsResponseShotsItemVerdictConfidenceMax = 1;
 
+export const listProjectsResponseCoverageCoveragePctMin = 0;
+export const listProjectsResponseCoverageCoveragePctMax = 100;
+
 
 
 export const ListProjectsResponseItem = zod.object({
@@ -89,6 +92,21 @@ export const ListProjectsResponseItem = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(listProjectsResponseCoverageCoveragePctMin).max(listProjectsResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 export const ListProjectsResponse = zod.array(ListProjectsResponseItem)
@@ -118,6 +136,9 @@ export const createProjectResponseShotsItemDurationMax = 600;
 
 export const createProjectResponseShotsItemVerdictConfidenceMin = 0;
 export const createProjectResponseShotsItemVerdictConfidenceMax = 1;
+
+export const createProjectResponseCoverageCoveragePctMin = 0;
+export const createProjectResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -152,6 +173,21 @@ export const CreateProjectResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(createProjectResponseCoverageCoveragePctMin).max(createProjectResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -166,6 +202,9 @@ export const getProjectResponseShotsItemDurationMax = 600;
 
 export const getProjectResponseShotsItemVerdictConfidenceMin = 0;
 export const getProjectResponseShotsItemVerdictConfidenceMax = 1;
+
+export const getProjectResponseCoverageCoveragePctMin = 0;
+export const getProjectResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -200,6 +239,21 @@ export const GetProjectResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(getProjectResponseCoverageCoveragePctMin).max(getProjectResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -252,6 +306,9 @@ export const updateProjectResponseShotsItemDurationMax = 600;
 export const updateProjectResponseShotsItemVerdictConfidenceMin = 0;
 export const updateProjectResponseShotsItemVerdictConfidenceMax = 1;
 
+export const updateProjectResponseCoverageCoveragePctMin = 0;
+export const updateProjectResponseCoverageCoveragePctMax = 100;
+
 
 
 export const UpdateProjectResponse = zod.object({
@@ -285,6 +342,21 @@ export const UpdateProjectResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(updateProjectResponseCoverageCoveragePctMin).max(updateProjectResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -299,6 +371,9 @@ export const directProjectResponseShotsItemDurationMax = 600;
 
 export const directProjectResponseShotsItemVerdictConfidenceMin = 0;
 export const directProjectResponseShotsItemVerdictConfidenceMax = 1;
+
+export const directProjectResponseCoverageCoveragePctMin = 0;
+export const directProjectResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -333,6 +408,21 @@ export const DirectProjectResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(directProjectResponseCoverageCoveragePctMin).max(directProjectResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -347,6 +437,9 @@ export const approvePlanResponseShotsItemDurationMax = 600;
 
 export const approvePlanResponseShotsItemVerdictConfidenceMin = 0;
 export const approvePlanResponseShotsItemVerdictConfidenceMax = 1;
+
+export const approvePlanResponseCoverageCoveragePctMin = 0;
+export const approvePlanResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -381,6 +474,21 @@ export const ApprovePlanResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(approvePlanResponseCoverageCoveragePctMin).max(approvePlanResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -410,6 +518,9 @@ export const checkFramesResponseShotsItemDurationMax = 600;
 
 export const checkFramesResponseShotsItemVerdictConfidenceMin = 0;
 export const checkFramesResponseShotsItemVerdictConfidenceMax = 1;
+
+export const checkFramesResponseCoverageCoveragePctMin = 0;
+export const checkFramesResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -444,6 +555,21 @@ export const CheckFramesResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(checkFramesResponseCoverageCoveragePctMin).max(checkFramesResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -463,6 +589,9 @@ export const decideShotResponseShotsItemDurationMax = 600;
 
 export const decideShotResponseShotsItemVerdictConfidenceMin = 0;
 export const decideShotResponseShotsItemVerdictConfidenceMax = 1;
+
+export const decideShotResponseCoverageCoveragePctMin = 0;
+export const decideShotResponseCoverageCoveragePctMax = 100;
 
 
 
@@ -497,6 +626,21 @@ export const DecideShotResponse = zod.object({
   "checklist": zod.array(zod.string()),
   "status": zod.enum(['draft', 'planned', 'shooting', 'complete']),
   "approvedAt": zod.string().nullish(),
+  "coverage": zod.object({
+  "coverage_pct": zod.number().min(decideShotResponseCoverageCoveragePctMin).max(decideShotResponseCoverageCoveragePctMax),
+  "status": zod.string(),
+  "slots": zod.array(zod.object({
+  "slot": zod.string(),
+  "status": zod.enum(['approved', 'needs_fix', 'missing']),
+  "note": zod.string().optional()
+})),
+  "next_shot": zod.union([zod.object({
+  "slot": zod.string(),
+  "instruction": zod.string()
+}),zod.null()]),
+  "source": zod.enum(['agenticorg', 'local']),
+  "fallback_reason": zod.string().optional()
+}).optional(),
   "createdAt": zod.string()
 })
 
@@ -524,21 +668,65 @@ export const GetServiceStatusResponse = zod.object({
   "ai": zod.boolean(),
   "voiceover": zod.boolean(),
   "payments": zod.boolean(),
+  "paymentMode": zod.string().optional(),
+  "coverage": zod.boolean().optional(),
   "admin": zod.boolean()
 })
 
 
 export const CreatePaymentResponse = zod.object({
-  "url": zod.string()
+  "url": zod.string(),
+  "paymentId": zod.int().optional()
 })
 
+
+export const PaymentReturnQueryParams = zod.object({
+  "payment": zod.coerce.number().int()
+})
+
+export const PaymentReturnResponse = zod.void()
+
+
+export const PaymentCallbackQueryParams = zod.object({
+  "payment": zod.coerce.number().int()
+})
 
 export const PaymentCallbackBody = zod.object({
-  "orderId": zod.string()
+  "orderId": zod.string().optional(),
+  "order_id": zod.string().optional(),
+  "data": zod.record(zod.string(), zod.unknown()).optional()
 })
 
-export const PaymentCallbackResponse = zod.object({
+export const PaymentCallbackResponse = zod.void()
+
+
+export const PaymentWebhookBody = zod.object({
+  "orderId": zod.string().optional(),
+  "order_id": zod.string().optional(),
+  "data": zod.record(zod.string(), zod.unknown()).optional()
+})
+
+export const PaymentWebhookResponse = zod.object({
   "status": zod.string()
+})
+
+
+export const GetPaymentParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetPaymentResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "merchantReference": zod.string(),
+  "orderId": zod.string().nullable(),
+  "amount": zod.int(),
+  "currency": zod.string(),
+  "environment": zod.string(),
+  "status": zod.string(),
+  "paid": zod.boolean(),
+  "createdAt": zod.string(),
+  "verifiedAt": zod.string().nullable()
 })
 
 
@@ -546,6 +734,20 @@ export const GetAdminResponse = zod.object({
   "userCount": zod.int(),
   "projectCount": zod.int(),
   "eventCount": zod.int(),
+  "coverageCallCount": zod.int(),
+  "payments": zod.array(zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "merchantReference": zod.string(),
+  "orderId": zod.string().nullable(),
+  "amount": zod.int(),
+  "currency": zod.string(),
+  "environment": zod.string(),
+  "status": zod.string(),
+  "paid": zod.boolean(),
+  "createdAt": zod.string(),
+  "verifiedAt": zod.string().nullable()
+})),
   "users": zod.array(zod.object({
   "id": zod.int(),
   "name": zod.string(),

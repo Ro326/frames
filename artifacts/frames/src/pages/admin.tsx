@@ -30,11 +30,24 @@ export default function Admin() {
         )}
         {authed && q.data && (
           <div className="space-y-8">
-            <div className="grid grid-cols-3 gap-px bg-border">
-              {[['Users', q.data.userCount], ['Projects', q.data.projectCount], ['Events', q.data.eventCount]].map(([l, v]) => (
+            <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-4">
+              {[['Users', q.data.userCount], ['Projects', q.data.projectCount], ['Events', q.data.eventCount], ['AgenticOrg calls', q.data.coverageCallCount]].map(([l, v]) => (
                 <div key={l as string} className="bg-background p-4"><p className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground">{l}</p><p className="font-display text-3xl font-normal text-primary" data-testid={'stat-' + String(l).toLowerCase()}>{v}</p></div>
               ))}
             </div>
+            <section>
+              <h2 className="font-display mb-3 text-3xl font-normal">Pine Labs payments</h2>
+              <p className="mb-3 text-xs text-muted-foreground">UAT test orders · Pro is granted only after server-side verification. Latest 200 orders.</p>
+              {q.data.payments.length === 0 ? <p className="rounded-md border border-dashed border-white/15 p-5 text-sm text-muted-foreground">No payment orders yet.</p> :
+                <div className="overflow-x-auto rounded-md border border-border"><table className="w-full min-w-[680px] text-left text-sm" data-testid="table-payments">
+                  <thead><tr className="border-b border-border font-normal">{['User', 'Order', 'Amount', 'Status', 'Verified', 'Created'].map((label) => <th key={label} className="p-3 font-normal">{label}</th>)}</tr></thead>
+                  <tbody>{q.data.payments.map((payment) => <tr key={payment.id} className="border-b border-border">
+                    <td className="p-3">{payment.userId}</td><td className="p-3 font-mono text-xs">{payment.orderId ?? payment.merchantReference}</td>
+                    <td className="p-3">₹{(payment.amount / 100).toFixed(2)} / {payment.environment}</td><td className="p-3">{payment.status}</td>
+                    <td className="p-3">{payment.paid ? 'Paid · Pro unlocked' : payment.verifiedAt ? 'Not paid' : 'Not yet'}</td><td className="p-3">{new Date(payment.createdAt).toLocaleString()}</td>
+                  </tr>)}</tbody>
+                </table></div>}
+            </section>
             <section>
               <h2 className="font-display mb-3 text-3xl font-normal">Users</h2>
               {q.data.users.length === 0 ? <p className="rounded-md border border-dashed border-white/15 p-5 text-sm text-muted-foreground">No users yet.</p> : (

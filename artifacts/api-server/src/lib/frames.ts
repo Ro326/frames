@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/express";
 import { db, usersTable, projectsTable, type StoredProject } from "@workspace/db";
 import { and, eq } from "@workspace/db";
 import { GetProjectParams, GetProjectResponse } from "@workspace/api-zod";
+import { localCoverage } from "./coverage-model";
 
 export function fail(status: number, message: string): never {
   throw Object.assign(new Error(message), { status });
@@ -19,6 +20,7 @@ export async function currentUser(req: Request) {
 export function projectResponse(project: StoredProject) {
   return GetProjectResponse.parse({
     ...project,
+    coverage: project.coverage ?? localCoverage({ shots: GetProjectResponse.shape.shots.parse(project.shots) }),
     createdAt: project.createdAt.toISOString(),
     approvedAt: project.approvedAt?.toISOString() ?? null,
   });

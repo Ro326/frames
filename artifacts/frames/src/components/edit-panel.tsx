@@ -6,6 +6,7 @@ import { Btn, ErrorBox } from '@/components/kit';
 import { getClip } from '@/lib/clips';
 import { slugify } from '@/lib/util';
 import { Mp4Export } from '@/components/mp4-export';
+import { UpgradeButton } from '@/components/upgrade-button';
 
 function extOf(name: string, type: string) {
   const m = /\.([a-z0-9]{2,5})$/i.exec(name);
@@ -47,11 +48,11 @@ export function EditPanel({ project }: { project: Project }) {
   const shots = project.shots;
   const ready = shots.length > 0 && shots.every((s) => s.approved);
   if (!ready) return (
-    <div className="rounded-md border border-dashed border-white/20 p-10 text-center" data-testid="edit-locked">
+    <div className="space-y-5"><UpgradeButton testId="button-edit-pro" /><div className="rounded-md border border-dashed border-white/20 p-10 text-center" data-testid="edit-locked">
       <Lock className="mx-auto mb-3 text-muted-foreground" />
       <h3 className="font-display text-3xl font-normal">Edit table locked</h3>
       <p className="mt-2 text-muted-foreground">Approve every shot to unlock the finished MP4 and optional editing ZIP. {shots.filter((s) => s.approved).length}/{shots.length} done.</p>
-    </div>
+    </div></div>
   );
   const exportZip = async () => {
     setBusy(true); setErr(null); setOk(false);
@@ -84,6 +85,7 @@ export function EditPanel({ project }: { project: Project }) {
   };
   return (
     <div className="space-y-6">
+      <UpgradeButton testId="button-edit-pro" />
       <Mp4Export key={`${project.id}:${project.approvedAt ?? ''}`} project={project} />
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full min-w-[520px] text-left text-sm" data-testid="table-edit">

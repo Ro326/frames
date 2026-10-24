@@ -10,5 +10,7 @@ export interface ServiceStatus {
   ai: boolean;
   voiceover: boolean;
   payments: boolean;
+  paymentMode?: string;
+  coverage?: boolean;
   admin: boolean;
 }

@@ -6,6 +6,7 @@ import { directorRouter } from "./director";
 import { checkerRouter } from "./checker";
 import { adminRouter } from "./admin";
 import { servicesRouter } from "./services";
+import { paymentsRouter } from "./payments";
 import rateLimit from "express-rate-limit";
 
 const router: IRouter = Router();
@@ -22,5 +23,6 @@ router.use(projectsRouter);
 router.use(directorRouter);
 router.use(checkerRouter);
 router.use(servicesRouter);
+router.use(paymentsRouter);
 
 export default router;

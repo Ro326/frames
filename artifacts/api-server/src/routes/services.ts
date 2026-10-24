@@ -28,14 +28,3 @@ servicesRouter.post("/projects/:id/voiceover", async (req, res) => {
   res.send(audio);
 });
 
-servicesRouter.post("/pay", async (req, _res) => {
-  await currentUser(req);
-  // Pine Labs' request shape, credential scheme and server-to-server verification
-  // must come from the merchant's selected product documentation. Never fabricate
-  // a checkout URL or grant Pro from an unverified browser callback.
-  fail(503, "Pine Labs checkout is not connected yet. Supply the Pine Labs API documentation and merchant configuration to enable the ₹49 Pro pack.");
-});
-
-servicesRouter.post("/pay/callback", (_req, _res) => {
-  fail(503, "Pine Labs callback verification is not configured. No Pro access has been granted.");
-});

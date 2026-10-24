@@ -5,6 +5,7 @@
  * Frames shoot director
  * OpenAPI spec version: 1.0.0
  */
+import type { CoverageReport } from './coverageReport';
 import type { ProjectStatus } from './projectStatus';
 import type { Shot } from './shot';
 
@@ -22,5 +23,6 @@ export interface Project {
   status: ProjectStatus;
   /** @nullable */
   approvedAt?: string | null;
+  coverage?: CoverageReport;
   createdAt: string;
 }

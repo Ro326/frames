@@ -14,6 +14,7 @@ import Landing from '@/pages/landing';
 import Studio from '@/pages/studio';
 import ProjectPage from '@/pages/project';
 import Admin from '@/pages/admin';
+import PaymentResult from '@/pages/payment-result';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
 
@@ -141,6 +142,7 @@ function ClerkProviderWithRoutes() {
               <Route path="/sign-in/*?" component={SignInPage} />
               <Route path="/sign-up/*?" component={SignUpPage} />
               <Route path="/studio">{() => <Protected><Studio /></Protected>}</Route>
+              <Route path="/payment/result">{() => <Protected><PaymentResult /></Protected>}</Route>
               <Route path="/projects/:id">{() => <Protected><ProjectPage /></Protected>}</Route>
               <Route path="/admin" component={Admin} />
               <Route component={NotFound} />

@@ -6,10 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Sparkles, PenLine } from 'lucide-react';
 import {
   useGetMe, useSaveProfile, useListProjects, useCreateProject, useDirectProject, useGetActivity,
-  useGetServiceStatus, useCreatePayment, getGetMeQueryKey, getListProjectsQueryKey, getGetProjectQueryKey,
+  useGetServiceStatus, getGetMeQueryKey, getListProjectsQueryKey, getGetProjectQueryKey,
 } from '@workspace/api-client-react';
 import { Btn, ErrorBox, Field, FrameEmpty, Shell, Skel, inputCls } from '@/components/kit';
 import { NICHES, errInfo, fmtDur, FREE_PROJECT_LIMIT } from '@/lib/util';
+import { UpgradeButton } from '@/components/upgrade-button';
 
 function ProfileForm() {
   const { user } = useUser();
@@ -112,17 +113,13 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
 }
 
 function ProCard({ highlight, paymentsReady = false }: { highlight: boolean; paymentsReady?: boolean }) {
-  const pay = useCreatePayment();
-  const go = () => pay.mutate(undefined, { onSuccess: (r) => { window.location.href = r.url; } });
-  const e = pay.isError ? errInfo(pay.error) : null;
   return (
     <div className={`rounded-md border p-5 transition ${highlight ? 'border-primary bg-primary/10' : 'border-border bg-card'}`} data-testid="card-pro">
       <p className="font-mono text-[11px] tracking-[0.08em] text-primary">Frames Pro</p>
       <p className="font-display mt-1 text-3xl font-normal">&#8377;49 / unlimited projects</p>
       <p className="mt-1 text-sm text-muted-foreground">{highlight ? 'You’ve used all 5 free tries. Upgrade to create more projects. Your existing projects stay accessible.' : 'Your first 5 projects are free. Upgrade after your fifth try for unlimited projects.'}</p>
       {!paymentsReady && <p className="mt-3 text-sm text-muted-foreground" data-testid="text-payments-unavailable">Checkout is not available yet.</p>}
-      {e && <div className="mt-3"><ErrorBox msg={e.status === 503 ? 'Payments are not set up yet. Setup is needed on the server before Pro can be purchased.' : e.msg} /></div>}
-      <Btn onClick={go} loading={pay.isPending} disabled={!paymentsReady} className="mt-4 w-full" data-testid="button-buy-pro">{paymentsReady ? 'Get Frames Pro' : 'Checkout coming soon'}</Btn>
+      <div className="mt-4"><UpgradeButton testId="button-buy-pro" /></div>
     </div>
   );
 }

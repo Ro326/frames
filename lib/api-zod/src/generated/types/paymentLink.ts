@@ -8,4 +8,5 @@
 
 export interface PaymentLink {
   url: string;
+  paymentId?: number;
 }

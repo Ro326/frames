@@ -31,7 +31,7 @@ directorRouter.post("/projects/:id/direct", async (req, res) => {
   });
   const plan = directorPlan(output);
   const [saved] = await db.update(projectsTable).set({
-    ...plan, title: output.title, status: "planned", updatedAt: new Date(),
+    ...plan, coverage: null, title: output.title, status: "planned", updatedAt: new Date(),
   }).where(and(eq(projectsTable.id, row.id), eq(projectsTable.updatedAt, row.updatedAt))).returning();
   if (!saved) fail(409, "The plan changed while generating. Reload before trying again.");
   res.json(projectResponse(saved));

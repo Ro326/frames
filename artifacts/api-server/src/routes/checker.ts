@@ -6,6 +6,7 @@ import { aiClient } from "../lib/anthropic";
 import { CHECKER_PROMPT } from "../../../../server/prompts.js";
 import { requestAgentJson } from "../lib/json-agent";
 import { ownedProject, projectResponse, fail } from "../lib/frames";
+import { refreshCoverage } from "../lib/coverage-producer";
 
 export const checkerRouter = Router();
 const verdictSchema = GetProjectResponse.shape.shots.element.shape.verdict.unwrap();
@@ -46,10 +47,10 @@ checkerRouter.post("/projects/:id/check", async (req, res) => {
   const shots = project.shots.map((item) => item.id === shot.id
     ? { ...item, verdict, approved: verdict.match, clipName: input.clipName } : item);
   const [saved] = await db.update(projectsTable).set({
-    shots, status: shots.every((item) => item.approved) ? "complete" : "shooting", updatedAt: new Date(),
+    shots, coverage: null, status: shots.every((item) => item.approved) ? "complete" : "shooting", updatedAt: new Date(),
   }).where(and(eq(projectsTable.id, row.id), eq(projectsTable.updatedAt, row.updatedAt))).returning();
   if (!saved) fail(409, "Another shot changed while checking. Reload and retry this check.");
-  res.json(projectResponse(saved));
+  res.json(projectResponse(await refreshCoverage(saved)));
 });
 
 checkerRouter.post("/projects/:id/decision", async (req, res) => {
@@ -68,7 +69,7 @@ checkerRouter.post("/projects/:id/decision", async (req, res) => {
         : { ...item, approved: false, verdict: undefined, clipName: undefined };
     });
     const [updated] = await tx.update(projectsTable).set({
-      shots, status: shots.every((item) => item.approved) ? "complete" : "shooting", updatedAt: new Date(),
+      shots, coverage: null, status: shots.every((item) => item.approved) ? "complete" : "shooting", updatedAt: new Date(),
     }).where(eq(projectsTable.id, row.id)).returning();
     await tx.insert(agentEventsTable).values({
       userId: user.id, agentName: "Human review",
@@ -77,5 +78,5 @@ checkerRouter.post("/projects/:id/decision", async (req, res) => {
     });
     return updated!;
   });
-  res.json(projectResponse(saved));
+  res.json(projectResponse(input.decision === "override" ? await refreshCoverage(saved) : saved));
 });

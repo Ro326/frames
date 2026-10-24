@@ -12,6 +12,7 @@ export const projectsTable = pgTable("projects", {
   vibe: text("vibe").notNull(),
   manual: boolean("manual").notNull().default(false),
   shots: jsonb("shots").notNull().default([]),
+  coverage: jsonb("coverage"),
   voiceover: text("voiceover").notNull().default(""),
   checklist: jsonb("checklist").notNull().default([]),
   status: text("status").notNull().default("draft"),

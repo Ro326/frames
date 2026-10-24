@@ -2,6 +2,7 @@
 // never touch Clerk, application records, agent events, or real creators' clips.
 import { createRoot } from 'react-dom/client';
 import { useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { Project } from '@workspace/api-client-react';
 import { EditPanel } from '../src/components/edit-panel';
 import { putClip, getClip, delClip } from '../src/lib/clips';
@@ -45,5 +46,5 @@ function Harness() {
 }
 
 if (!import.meta.env.DEV) throw new Error('Development verification only.');
-prepare().then(() => createRoot(document.getElementById('root')!).render(<Harness />))
+prepare().then(() => createRoot(document.getElementById('root')!).render(<QueryClientProvider client={new QueryClient()}><Harness /></QueryClientProvider>))
   .catch((error: unknown) => { document.getElementById('root')!.textContent = String(error); });

@@ -138,6 +138,47 @@ export const ProjectStatus = {
   complete: 'complete',
 } as const;
 
+export type CoverageSlotStatus = typeof CoverageSlotStatus[keyof typeof CoverageSlotStatus];
+
+
+export const CoverageSlotStatus = {
+  approved: 'approved',
+  needs_fix: 'needs_fix',
+  missing: 'missing',
+} as const;
+
+export interface CoverageSlot {
+  slot: string;
+  status: CoverageSlotStatus;
+  note?: string;
+}
+
+export interface CoverageNextShot {
+  slot: string;
+  instruction: string;
+}
+
+export type CoverageReportSource = typeof CoverageReportSource[keyof typeof CoverageReportSource];
+
+
+export const CoverageReportSource = {
+  agenticorg: 'agenticorg',
+  local: 'local',
+} as const;
+
+export interface CoverageReport {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  coverage_pct: number;
+  status: string;
+  slots: CoverageSlot[];
+  next_shot: CoverageNextShot | null;
+  source: CoverageReportSource;
+  fallback_reason?: string;
+}
+
 export interface Project {
   id: number;
   title: string;
@@ -152,6 +193,7 @@ export interface Project {
   status: ProjectStatus;
   /** @nullable */
   approvedAt?: string | null;
+  coverage?: CoverageReport;
   createdAt: string;
 }
 
@@ -197,22 +239,55 @@ export interface ServiceStatus {
   ai: boolean;
   voiceover: boolean;
   payments: boolean;
+  paymentMode?: string;
+  coverage?: boolean;
   admin: boolean;
 }
 
 export interface PaymentLink {
   url: string;
+  paymentId?: number;
 }
 
+export type PaymentNoticeData = { [key: string]: unknown };
+
 export interface PaymentNotice {
-  orderId: string;
+  orderId?: string;
+  order_id?: string;
+  data?: PaymentNoticeData;
+}
+
+export interface Payment {
+  id: number;
+  userId: number;
+  merchantReference: string;
+  /** @nullable */
+  orderId: string | null;
+  amount: number;
+  currency: string;
+  environment: string;
+  status: string;
+  paid: boolean;
+  createdAt: string;
+  /** @nullable */
+  verifiedAt: string | null;
 }
 
 export interface AdminReport {
   userCount: number;
   projectCount: number;
   eventCount: number;
+  coverageCallCount: number;
+  payments: Payment[];
   users: User[];
   events: AgentEvent[];
 }
+
+export type PaymentReturnParams = {
+payment: number;
+};
+
+export type PaymentCallbackParams = {
+payment: number;
+};
 

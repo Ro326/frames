@@ -6,12 +6,15 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { AgentEvent } from './agentEvent';
+import type { Payment } from './payment';
 import type { User } from './user';
 
 export interface AdminReport {
   userCount: number;
   projectCount: number;
   eventCount: number;
+  coverageCallCount: number;
+  payments: Payment[];
   users: User[];
   events: AgentEvent[];
 }

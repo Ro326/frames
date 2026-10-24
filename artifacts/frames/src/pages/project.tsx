@@ -7,6 +7,7 @@ import { Btn, ErrorBox, Shell, Skel } from '@/components/kit';
 import { PlanEditor } from '@/components/plan-editor';
 import { ShootPanel } from '@/components/shoot-panel';
 import { EditPanel } from '@/components/edit-panel';
+import { UpgradeButton } from '@/components/upgrade-button';
 import { errInfo, fmtDur } from '@/lib/util';
 
 type Tab = 'plan' | 'shoot' | 'edit';
@@ -15,7 +16,7 @@ export default function ProjectPage() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
   const qc = useQueryClient();
-  const q = useGetProject(id, { query: { enabled: Number.isFinite(id), queryKey: getGetProjectQueryKey(id) } });
+  const q = useGetProject(id, { query: { enabled: Number.isFinite(id), queryKey: getGetProjectQueryKey(id), refetchOnWindowFocus: true } });
   const direct = useDirectProject();
   const [tab, setTab] = useState<Tab | null>(null);
   const p = q.data;
@@ -44,6 +45,7 @@ export default function ProjectPage() {
       </div>
       {active === 'plan' && (
         <>
+          <div className="mb-5"><UpgradeButton testId="button-plan-pro" /></div>
           {needsDirect && (
             <div className="mb-6 space-y-3 rounded-md border border-primary/40 bg-primary/10 p-4">
               <p className="font-normal">No shot list yet.</p>

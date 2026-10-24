@@ -42,7 +42,7 @@ projectsRouter.patch("/projects/:id", async (req, res) => {
   const shots = input.shots.map(({ verdict: _verdict, clipName: _clipName, ...shot }) => ({ ...shot, approved: false }));
   const [updated] = await db.transaction(async (tx) => {
     const updatedRows = await tx.update(projectsTable).set({
-      ...input, shots, status: "planned", approvedAt: null, updatedAt: new Date(),
+      ...input, shots, coverage: null, status: "planned", approvedAt: null, updatedAt: new Date(),
     }).where(eq(projectsTable.id, row.id)).returning();
     await tx.insert(agentEventsTable).values({
       userId: user.id, agentName: "Plan editor", inputSummary: `Project ${row.id}: plan edited`,

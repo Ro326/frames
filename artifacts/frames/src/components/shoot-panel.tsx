@@ -72,7 +72,7 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
       <p className="mt-1 text-sm text-muted-foreground">{[shot.angle, shot.movement].filter(Boolean).join(' / ')}{shot.props.length ? ' / ' + shot.props.join(', ') : ''}</p>
       <ShotGuide idPrefix={'shoot-' + index} shot={{ description: shot.description, angle: shot.angle, movement: shot.movement, props: shot.props }} />
       {shot.tip && <p className="mt-2 border-l-2 border-primary pl-3 text-sm">{shot.tip}</p>}
-      {next && !hasLocal && <p className="font-display mt-3 text-2xl font-normal text-destructive" data-testid="text-shoot-next">Shoot this next</p>}
+      {next && !shot.approved && <p className="font-display mt-3 text-2xl font-normal text-primary" data-testid="text-shoot-next">Recommended next shot</p>}
       {v && (
         <div className={`mt-3 rounded-md border p-3 ${v.match ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-primary/60 bg-primary/10'}`} data-testid={'verdict-' + index}>
           <p className={`font-display text-2xl font-normal ${v.match ? 'text-emerald-400' : 'text-primary'}`}>{v.match ? 'Go ahead' : 'Fix before you move on'} <span className="font-mono text-xs font-normal text-muted-foreground">{Math.round(v.confidence * 100)}%</span></p>
@@ -102,15 +102,30 @@ export function ShootPanel({ project }: { project: Project }) {
   if (project.status === 'draft' || project.status === 'planned') return <p className="rounded-md border border-dashed border-white/20 p-8 text-center text-muted-foreground">Approve the plan to unlock shooting.</p>;
   const shots = project.shots;
   const approved = shots.filter((s) => s.approved).length;
-  const covered = shots.filter((s) => s.verdict || s.clipName).length;
-  const nextIdx = shots.findIndex((s) => !(local?.has(s.id)) && !s.clipName);
+  const coverage = project.coverage;
+  const percent = coverage?.coverage_pct ?? (shots.length ? Math.round(approved / shots.length * 100) : 0);
+  const nextId = coverage ? coverage.next_shot?.slot : shots.find((shot) => !shot.approved)?.id;
+  const nextIdx = shots.findIndex((shot) => shot.id === nextId);
+  const next = shots[nextIdx];
   return (
     <div className="space-y-5">
       <div className="rounded-md border border-border bg-card p-4">
-        <div className="flex items-end justify-between"><p className="font-display text-3xl font-normal" data-testid="text-coverage">{covered}/{shots.length} <span className="text-lg text-muted-foreground">covered</span></p><p className="font-mono text-xs tracking-[0.04em] text-muted-foreground">{approved} approved</p></div>
-        <div className="mt-3 flex gap-1">{shots.map((s) => <span key={s.id} className={`h-2 flex-1 rounded-sm transition-colors ${s.approved ? 'bg-emerald-500' : s.verdict || s.clipName ? 'bg-primary' : 'bg-destructive/70'}`} />)}</div>
+        <div className="flex items-end justify-between"><p className="font-display text-3xl font-normal" data-testid="text-coverage">{percent}% <span className="text-lg text-muted-foreground">coverage</span></p><p className="font-mono text-xs tracking-[0.04em] text-muted-foreground">{approved}/{shots.length} approved</p></div>
+        <progress className="mt-3 h-2 w-full accent-primary" aria-label="Shoot coverage" max={100} value={percent} />
+        <div className="mt-2 flex gap-1">{shots.map((s) => {
+          const slot = coverage?.slots.find((item) => item.slot === s.id);
+          const status = slot?.status ?? (s.approved ? 'approved' : s.verdict ? 'needs_fix' : 'missing');
+          return <span key={s.id} title={slot?.note ?? status} className={`h-1 flex-1 rounded-sm ${status === 'approved' ? 'bg-emerald-500' : status === 'needs_fix' ? 'bg-primary' : 'bg-muted-foreground/30'}`} />;
+        })}</div>
+        <p className="mt-2 text-sm" data-testid="text-coverage-status">{coverage?.status ?? 'Keep shooting'}</p>
+        <p className="mt-1 text-xs text-muted-foreground" data-testid="text-coverage-source">{coverage?.source === 'agenticorg' ? 'AgenticOrg Coverage Producer' : coverage?.fallback_reason ?? 'Local coverage · based on approved shots'}</p>
         <p className="mt-3 text-xs text-muted-foreground">Clips stay on this device, stored in your browser. Only three still frames per clip are sent for review. Clearing browser data deletes them.</p>
       </div>
+      {next && <section className="space-y-2 rounded-md border border-primary/40 bg-primary/5 p-4" data-testid="card-shoot-next">
+        <p className="font-mono text-xs text-primary">Shoot this next · {String(nextIdx + 1).padStart(2, '0')} / {next.section}</p>
+        <h3 className="font-display text-2xl font-normal">{next.description}</h3>
+        <p className="text-sm">{coverage?.next_shot?.instruction || next.verdict?.fix || [next.angle, next.movement].filter(Boolean).join(' · ')}</p>
+      </section>}
       <ul className="space-y-4">
         {shots.map((s, i) => <ShotCard key={s.id} project={project} shot={s} index={i} next={i === nextIdx} hasLocal={!!local?.has(s.id)} onLocal={onLocal} />)}
       </ul>

@@ -180,8 +180,28 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PaymentLink" }
   /pay/callback:
+    get:
+      operationId: paymentReturn
+      parameters:
+        - { name: payment, in: query, required: true, schema: { type: integer } }
+      responses:
+        "303": { description: Redirect to verified payment result page }
     post:
       operationId: paymentCallback
+      parameters:
+        - { name: payment, in: query, required: true, schema: { type: integer } }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentNotice" }
+          application/x-www-form-urlencoded:
+            schema: { $ref: "#/components/schemas/PaymentNotice" }
+      responses:
+        "303": { description: "Notification checked server-side, then redirected to payment result" }
+  /pay/webhook:
+    post:
+      operationId: paymentWebhook
       requestBody:
         required: true
         content:
@@ -189,10 +209,21 @@ paths:
             schema: { $ref: "#/components/schemas/PaymentNotice" }
       responses:
         "200":
-          description: Payment recorded
+          description: Provider order queried independently of notification
           content:
             application/json:
               schema: { $ref: "#/components/schemas/HealthStatus" }
+  /pay/{id}:
+    get:
+      operationId: getPayment
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Own payment, verified server-side
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
   /admin:
     get:
       operationId: getAdmin
@@ -288,6 +319,7 @@ components:
         checklist: { type: array, items: { type: string } }
         status: { type: string, enum: [draft, planned, shooting, complete] }
         approvedAt: { type: [string, "null"] }
+        coverage: { $ref: "#/components/schemas/CoverageReport" }
         createdAt: { type: string }
     FrameInput:
       type: object
@@ -320,23 +352,70 @@ components:
         ai: { type: boolean }
         voiceover: { type: boolean }
         payments: { type: boolean }
+        paymentMode: { type: string }
+        coverage: { type: boolean }
         admin: { type: boolean }
     PaymentLink:
       type: object
       required: [url]
       properties:
         url: { type: string }
+        paymentId: { type: integer }
     PaymentNotice:
       type: object
-      required: [orderId]
       properties:
         orderId: { type: string }
+        order_id: { type: string }
+        data: { type: object, additionalProperties: true }
+    Payment:
+      type: object
+      required: [id, userId, merchantReference, orderId, amount, currency, environment, status, paid, createdAt, verifiedAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        merchantReference: { type: string }
+        orderId: { type: [string, "null"] }
+        amount: { type: integer }
+        currency: { type: string }
+        environment: { type: string }
+        status: { type: string }
+        paid: { type: boolean }
+        createdAt: { type: string }
+        verifiedAt: { type: [string, "null"] }
+    CoverageSlot:
+      type: object
+      required: [slot, status]
+      properties:
+        slot: { type: string }
+        status: { type: string, enum: [approved, needs_fix, missing] }
+        note: { type: string }
+    CoverageNextShot:
+      type: object
+      required: [slot, instruction]
+      properties:
+        slot: { type: string }
+        instruction: { type: string }
+    CoverageReport:
+      type: object
+      required: [coverage_pct, status, slots, next_shot, source]
+      properties:
+        coverage_pct: { type: number, minimum: 0, maximum: 100 }
+        status: { type: string }
+        slots: { type: array, items: { $ref: "#/components/schemas/CoverageSlot" } }
+        next_shot:
+          anyOf:
+            - { $ref: "#/components/schemas/CoverageNextShot" }
+            - { type: "null" }
+        source: { type: string, enum: [agenticorg, local] }
+        fallback_reason: { type: string }
     AdminReport:
       type: object
-      required: [userCount, projectCount, eventCount, users, events]
+      required: [userCount, projectCount, eventCount, users, events, payments, coverageCallCount]
       properties:
         userCount: { type: integer }
         projectCount: { type: integer }
         eventCount: { type: integer }
+        coverageCallCount: { type: integer }
+        payments: { type: array, items: { $ref: "#/components/schemas/Payment" } }
         users: { type: array, items: { $ref: "#/components/schemas/User" } }
         events: { type: array, items: { $ref: "#/components/schemas/AgentEvent" } }
