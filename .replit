@@ -24,3 +24,5 @@ timeoutMs = 20000
 [userenv.shared]
 PINELABS_ENV = "uat"
 AGENTICORG_BASE_URL = "https://agenticorg.hackathon.pinelabs.com"
+FRAMES_UPI_ID = "rohitr2472@okhdfcbank"
+FRAMES_UPI_PAYEE_NAME = "Frames"

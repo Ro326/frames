@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type PaymentCallbackParams = {
-payment: number;
-};
+export interface PaymentReferenceInput {
+  /** @pattern ^[0-9]{12}$ */
+  transactionReference: string;
+}

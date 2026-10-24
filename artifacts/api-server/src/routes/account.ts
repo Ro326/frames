@@ -4,7 +4,7 @@ import { db, usersTable, agentEventsTable } from "@workspace/db";
 import { desc, eq } from "@workspace/db";
 import { SaveProfileBody, SaveProfileResponse, GetMeResponse, GetActivityResponse } from "@workspace/api-zod";
 import { currentUser, fail } from "../lib/frames";
-import { pineReady } from "../lib/pinelabs-client";
+import { upiReady } from "../lib/upi-model";
 import { directorReady } from "../lib/agenticorg-director";
 
 export const accountRouter = Router();
@@ -48,8 +48,8 @@ accountRouter.get("/status", (_req, res) => {
   res.json({
     ai: directorReady(),
     voiceover: !!process.env.ELEVENLABS_API_KEY,
-    payments: pineReady(),
-    paymentMode: "uat",
+    payments: upiReady(),
+    paymentMode: "manual_upi",
     coverage: false,
     admin: !!process.env.ADMIN_PASSWORD,
   });

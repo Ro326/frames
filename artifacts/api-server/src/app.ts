@@ -37,8 +37,7 @@ app.use(clerkMiddleware((req) => ({
   publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY),
 })));
 app.use((req, res, next) => {
-  const paymentNotice = req.method === "POST" && ["/api/pay/callback", "/api/pay/webhook"].includes(req.path);
-  if (!paymentNotice && ["POST", "PATCH", "DELETE", "PUT"].includes(req.method) && req.headers["sec-fetch-site"] === "cross-site") {
+  if (["POST", "PATCH", "DELETE", "PUT"].includes(req.method) && req.headers["sec-fetch-site"] === "cross-site") {
     res.status(403).json({ error: "Cross-site requests are not permitted." }); return;
   }
   next();

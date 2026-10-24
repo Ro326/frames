@@ -32,10 +32,9 @@ import type {
   FrameInput,
   HealthStatus,
   Payment,
-  PaymentCallbackParams,
   PaymentLink,
-  PaymentNotice,
-  PaymentReturnParams,
+  PaymentReferenceInput,
+  PaymentReviewInput,
   PlanInput,
   ProfileInput,
   Project,
@@ -1326,125 +1325,16 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getCreatePaymentMutationOptions(options), queryClient);
     }
 
-export const getPaymentReturnUrl = (params: PaymentReturnParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getSubmitPaymentReferenceUrl = (id: number,) => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/pay/callback?${stringifiedParams}` : `/api/pay/callback`
+  return `/api/pay/${id}/reference`
 }
 
-export const paymentReturn = async (params: PaymentReturnParams, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
-
-  return customFetch<unknown>(getPaymentReturnUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getPaymentReturnQueryKey = (params?: PaymentReturnParams,) => {
-    return [
-    `/api/pay/callback`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getPaymentReturnQueryOptions = <TData = Awaited<ReturnType<typeof paymentReturn>>, TError = ErrorType<void>>(params: PaymentReturnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getPaymentReturnQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof paymentReturn>>> = ({ signal }) => paymentReturn(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type PaymentReturnQueryResult = NonNullable<Awaited<ReturnType<typeof paymentReturn>>>
-export type PaymentReturnQueryError = ErrorType<void>
-
-
-export function usePaymentReturn<TData = Awaited<ReturnType<typeof paymentReturn>>, TError = ErrorType<void>>(
- params: PaymentReturnParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof paymentReturn>>,
-          TError,
-          Awaited<ReturnType<typeof paymentReturn>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePaymentReturn<TData = Awaited<ReturnType<typeof paymentReturn>>, TError = ErrorType<void>>(
- params: PaymentReturnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof paymentReturn>>,
-          TError,
-          Awaited<ReturnType<typeof paymentReturn>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function usePaymentReturn<TData = Awaited<ReturnType<typeof paymentReturn>>, TError = ErrorType<void>>(
- params: PaymentReturnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function usePaymentReturn<TData = Awaited<ReturnType<typeof paymentReturn>>, TError = ErrorType<void>>(
- params: PaymentReturnParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof paymentReturn>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getPaymentReturnQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getPaymentCallbackUrl = (params: PaymentCallbackParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/pay/callback?${stringifiedParams}` : `/api/pay/callback`
-}
-
-export const paymentCallback = async (params: PaymentCallbackParams,
-    paymentNotice?: PaymentNotice, options?: Parameters<typeof customFetch>[1]): Promise<unknown> => {
+export const submitPaymentReference = async (id: number,
+    paymentReferenceInput: PaymentReferenceInput, options?: Parameters<typeof customFetch>[1]): Promise<Payment> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1460,12 +1350,12 @@ export const paymentCallback = async (params: PaymentCallbackParams,
     }
     return headers;
   };
-return customFetch<unknown>(getPaymentCallbackUrl(params),
+return customFetch<Payment>(getSubmitPaymentReferenceUrl(id),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(paymentNotice)
+    body: JSON.stringify(paymentReferenceInput)
   }
 );}
 
@@ -1473,13 +1363,13 @@ return customFetch<unknown>(getPaymentCallbackUrl(params),
 
 
 
-export const getPaymentCallbackMutationKey = () => ['paymentCallback'] as const;
+export const getSubmitPaymentReferenceMutationKey = () => ['submitPaymentReference'] as const;
 
-export const getPaymentCallbackMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentCallback>>, TError,PaymentCallbackMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof paymentCallback>>, TError,PaymentCallbackMutationVariables, TContext> => {
+export const getSubmitPaymentReferenceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitPaymentReference>>, TError,SubmitPaymentReferenceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitPaymentReference>>, TError,SubmitPaymentReferenceMutationVariables, TContext> => {
 
-const mutationKey = getPaymentCallbackMutationKey();
+const mutationKey = getSubmitPaymentReferenceMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1489,10 +1379,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof paymentCallback>>, PaymentCallbackMutationVariables> = (props) => {
-          const {params,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitPaymentReference>>, SubmitPaymentReferenceMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  paymentCallback(params,data,requestOptions)
+          return  submitPaymentReference(id,data,requestOptions)
         }
 
 
@@ -1502,31 +1392,32 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PaymentCallbackMutationResult = NonNullable<Awaited<ReturnType<typeof paymentCallback>>>
-    export type PaymentCallbackMutationBody = BodyType<PaymentNotice> | undefined
-    export type PaymentCallbackMutationError = ErrorType<void>
-    export type PaymentCallbackMutationVariables = {params: PaymentCallbackParams;data?: BodyType<PaymentNotice>}
+    export type SubmitPaymentReferenceMutationResult = NonNullable<Awaited<ReturnType<typeof submitPaymentReference>>>
+    export type SubmitPaymentReferenceMutationBody = BodyType<PaymentReferenceInput>
+    export type SubmitPaymentReferenceMutationError = ErrorType<unknown>
+    export type SubmitPaymentReferenceMutationVariables = {id: number;data: BodyType<PaymentReferenceInput>}
 
-    export const usePaymentCallback = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentCallback>>, TError,PaymentCallbackMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useSubmitPaymentReference = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitPaymentReference>>, TError,SubmitPaymentReferenceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof paymentCallback>>,
+        Awaited<ReturnType<typeof submitPaymentReference>>,
         TError,
-        PaymentCallbackMutationVariables,
+        SubmitPaymentReferenceMutationVariables,
         TContext
       > => {
-      return useMutation(getPaymentCallbackMutationOptions(options), queryClient);
+      return useMutation(getSubmitPaymentReferenceMutationOptions(options), queryClient);
     }
 
-export const getPaymentWebhookUrl = () => {
+export const getReviewPaymentUrl = (id: number,) => {
 
 
 
 
-  return `/api/pay/webhook`
+  return `/api/admin/payments/${id}/review`
 }
 
-export const paymentWebhook = async (paymentNotice: PaymentNotice, options?: Parameters<typeof customFetch>[1]): Promise<HealthStatus> => {
+export const reviewPayment = async (id: number,
+    paymentReviewInput: PaymentReviewInput, options?: Parameters<typeof customFetch>[1]): Promise<Payment> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1542,12 +1433,12 @@ export const paymentWebhook = async (paymentNotice: PaymentNotice, options?: Par
     }
     return headers;
   };
-return customFetch<HealthStatus>(getPaymentWebhookUrl(),
+return customFetch<Payment>(getReviewPaymentUrl(id),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(paymentNotice)
+    body: JSON.stringify(paymentReviewInput)
   }
 );}
 
@@ -1555,13 +1446,13 @@ return customFetch<HealthStatus>(getPaymentWebhookUrl(),
 
 
 
-export const getPaymentWebhookMutationKey = () => ['paymentWebhook'] as const;
+export const getReviewPaymentMutationKey = () => ['reviewPayment'] as const;
 
-export const getPaymentWebhookMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentWebhook>>, TError,PaymentWebhookMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof paymentWebhook>>, TError,PaymentWebhookMutationVariables, TContext> => {
+export const getReviewPaymentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewPayment>>, TError,ReviewPaymentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reviewPayment>>, TError,ReviewPaymentMutationVariables, TContext> => {
 
-const mutationKey = getPaymentWebhookMutationKey();
+const mutationKey = getReviewPaymentMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1571,10 +1462,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof paymentWebhook>>, PaymentWebhookMutationVariables> = (props) => {
-          const {data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reviewPayment>>, ReviewPaymentMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
 
-          return  paymentWebhook(data,requestOptions)
+          return  reviewPayment(id,data,requestOptions)
         }
 
 
@@ -1584,20 +1475,20 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type PaymentWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof paymentWebhook>>>
-    export type PaymentWebhookMutationBody = BodyType<PaymentNotice>
-    export type PaymentWebhookMutationError = ErrorType<unknown>
-    export type PaymentWebhookMutationVariables = {data: BodyType<PaymentNotice>}
+    export type ReviewPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof reviewPayment>>>
+    export type ReviewPaymentMutationBody = BodyType<PaymentReviewInput>
+    export type ReviewPaymentMutationError = ErrorType<unknown>
+    export type ReviewPaymentMutationVariables = {id: number;data: BodyType<PaymentReviewInput>}
 
-    export const usePaymentWebhook = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof paymentWebhook>>, TError,PaymentWebhookMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useReviewPayment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reviewPayment>>, TError,ReviewPaymentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof paymentWebhook>>,
+        Awaited<ReturnType<typeof reviewPayment>>,
         TError,
-        PaymentWebhookMutationVariables,
+        ReviewPaymentMutationVariables,
         TContext
       > => {
-      return useMutation(getPaymentWebhookMutationOptions(options), queryClient);
+      return useMutation(getReviewPaymentMutationOptions(options), queryClient);
     }
 
 export const getGetPaymentUrl = (id: number,) => {

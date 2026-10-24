@@ -20,4 +20,12 @@ export interface Payment {
   createdAt: string;
   /** @nullable */
   verifiedAt: string | null;
+  /** @nullable */
+  upiUri?: string | null;
+  /** @nullable */
+  upiId?: string | null;
+  /** @nullable */
+  payeeName?: string | null;
+  /** @nullable */
+  transactionReference?: string | null;
 }

@@ -680,34 +680,61 @@ export const CreatePaymentResponse = zod.object({
 })
 
 
-export const PaymentReturnQueryParams = zod.object({
-  "payment": zod.coerce.number().int()
+export const SubmitPaymentReferenceParams = zod.object({
+  "id": zod.coerce.number().int()
 })
 
-export const PaymentReturnResponse = zod.void()
+export const submitPaymentReferenceBodyTransactionReferenceRegExp = new RegExp('^[0-9]{12}$');
 
 
-export const PaymentCallbackQueryParams = zod.object({
-  "payment": zod.coerce.number().int()
+export const SubmitPaymentReferenceBody = zod.object({
+  "transactionReference": zod.string().regex(submitPaymentReferenceBodyTransactionReferenceRegExp)
 })
 
-export const PaymentCallbackBody = zod.object({
-  "orderId": zod.string().optional(),
-  "order_id": zod.string().optional(),
-  "data": zod.record(zod.string(), zod.unknown()).optional()
+export const SubmitPaymentReferenceResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "merchantReference": zod.string(),
+  "orderId": zod.string().nullable(),
+  "amount": zod.int(),
+  "currency": zod.string(),
+  "environment": zod.string(),
+  "status": zod.string(),
+  "paid": zod.boolean(),
+  "createdAt": zod.string(),
+  "verifiedAt": zod.string().nullable(),
+  "upiUri": zod.string().nullish(),
+  "upiId": zod.string().nullish(),
+  "payeeName": zod.string().nullish(),
+  "transactionReference": zod.string().nullish()
 })
 
-export const PaymentCallbackResponse = zod.void()
 
-
-export const PaymentWebhookBody = zod.object({
-  "orderId": zod.string().optional(),
-  "order_id": zod.string().optional(),
-  "data": zod.record(zod.string(), zod.unknown()).optional()
+export const ReviewPaymentParams = zod.object({
+  "id": zod.coerce.number().int()
 })
 
-export const PaymentWebhookResponse = zod.object({
-  "status": zod.string()
+export const ReviewPaymentBody = zod.object({
+  "decision": zod.enum(['approve', 'reject']),
+  "confirmed": zod.boolean()
+})
+
+export const ReviewPaymentResponse = zod.object({
+  "id": zod.int(),
+  "userId": zod.int(),
+  "merchantReference": zod.string(),
+  "orderId": zod.string().nullable(),
+  "amount": zod.int(),
+  "currency": zod.string(),
+  "environment": zod.string(),
+  "status": zod.string(),
+  "paid": zod.boolean(),
+  "createdAt": zod.string(),
+  "verifiedAt": zod.string().nullable(),
+  "upiUri": zod.string().nullish(),
+  "upiId": zod.string().nullish(),
+  "payeeName": zod.string().nullish(),
+  "transactionReference": zod.string().nullish()
 })
 
 
@@ -726,7 +753,11 @@ export const GetPaymentResponse = zod.object({
   "status": zod.string(),
   "paid": zod.boolean(),
   "createdAt": zod.string(),
-  "verifiedAt": zod.string().nullable()
+  "verifiedAt": zod.string().nullable(),
+  "upiUri": zod.string().nullish(),
+  "upiId": zod.string().nullish(),
+  "payeeName": zod.string().nullish(),
+  "transactionReference": zod.string().nullish()
 })
 
 
@@ -746,7 +777,11 @@ export const GetAdminResponse = zod.object({
   "status": zod.string(),
   "paid": zod.boolean(),
   "createdAt": zod.string(),
-  "verifiedAt": zod.string().nullable()
+  "verifiedAt": zod.string().nullable(),
+  "upiUri": zod.string().nullish(),
+  "upiId": zod.string().nullish(),
+  "payeeName": zod.string().nullish(),
+  "transactionReference": zod.string().nullish()
 })),
   "users": zod.array(zod.object({
   "id": zod.int(),

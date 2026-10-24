@@ -1,49 +1,43 @@
-import { db, paymentsTable, usersTable, agentEventsTable, eq, type StoredPayment } from "@workspace/db";
-import { pineRequest, validatePineOrder } from "./pinelabs-client";
+import { paymentsTable, usersTable, agentEventsTable, db, eq, type StoredPayment } from "@workspace/db";
+import { assertReviewable, savedUpiIntent, UPI_ENVIRONMENT } from "./upi-model";
 
 export function paymentResponse(payment: StoredPayment) {
+  const manual = payment.environment === UPI_ENVIRONMENT;
+  const intent = manual ? savedUpiIntent(payment.checkoutUrl, payment.merchantReference) : null;
   return {
     id: payment.id, userId: payment.userId, merchantReference: payment.merchantReference,
     orderId: payment.orderId, amount: payment.amount, currency: payment.currency,
     environment: payment.environment, status: payment.status,
     paid: payment.status === "PROCESSED" && payment.verifiedAt !== null,
     verifiedAt: payment.verifiedAt?.toISOString() ?? null, createdAt: payment.createdAt.toISOString(),
+    upiUri: intent?.uri ?? null, upiId: intent?.id ?? null, payeeName: intent?.name ?? null,
+    transactionReference: manual && payment.orderId?.startsWith("UPI:") ? payment.orderId.slice(4) : null,
   };
 }
-export async function paymentEvent(payment: StoredPayment, status: string, operation: string) {
-  await db.insert(agentEventsTable).values({
-    userId: payment.userId, agentName: "Pine Labs", inputSummary: `${operation}: Frames Pro ₹49, payment ${payment.id}`,
-    outputJson: { operation, status, order_id: payment.orderId, merchant_reference: payment.merchantReference,
-      amount_paise: payment.amount, environment: payment.environment, timestamp: new Date().toISOString() },
-  });
+export function paymentAudit(payment: StoredPayment, operation: string, confirmed = false) {
+  return {
+    userId: payment.userId, agentName: "UPI Payment",
+    inputSummary: `${operation}: Frames Pro ₹49, payment ${payment.id}`,
+    humanDecision: operation === "approve" ? "Approved after manually checking receipt" : operation === "reject" ? "Rejected after manual review" : null,
+    outputJson: {
+      operation, status: payment.status, payment_id: payment.id,
+      transaction_reference: payment.orderId, merchant_reference: payment.merchantReference,
+      amount_paise: payment.amount, currency: payment.currency, environment: payment.environment,
+      receipt_confirmed_by_admin: confirmed, timestamp: new Date().toISOString(),
+    },
+  };
 }
-
-export async function verifyPayment(payment: StoredPayment): Promise<StoredPayment> {
-  if (!payment.orderId || payment.environment !== "uat") throw new Error("This payment has no verifiable UAT order.");
-  let verified: ReturnType<typeof validatePineOrder>;
-  try {
-    const response = await pineRequest(`/api/pay/v1/orders/${encodeURIComponent(payment.orderId)}`);
-    verified = validatePineOrder(response, {
-      orderId: payment.orderId, merchantReference: payment.merchantReference, merchantId: process.env.PINELABS_MERCHANT_ID ?? "",
-    });
-  } catch {
-    await paymentEvent(payment, "VERIFICATION_FAILED", "verify");
-    throw Object.assign(new Error("Pine Labs could not verify this payment. Pro has not been changed. Please check again shortly."), { status: 502 });
-  }
+export async function reviewManualPayment(id: number, decision: "approve" | "reject", confirmed: boolean) {
   return db.transaction(async (tx) => {
-    const [locked] = await tx.select().from(paymentsTable).where(eq(paymentsTable.id, payment.id)).for("update");
-    if (!locked) throw new Error("Payment record missing.");
-    // Replayed notifications are safe; a stale pending response cannot undo success.
-    const status = locked.status === "PROCESSED" ? "PROCESSED" : verified.status;
+    const [payment] = await tx.select().from(paymentsTable).where(eq(paymentsTable.id, id)).for("update");
+    if (!payment) throw Object.assign(new Error("Payment not found."), { status: 404 });
+    if (!assertReviewable(payment, decision, confirmed)) return payment;
+    const approved = decision === "approve";
     const [updated] = await tx.update(paymentsTable).set({
-      status, verifiedAt: new Date(),
+      status: approved ? "PROCESSED" : "REJECTED", verifiedAt: approved ? new Date() : null,
     }).where(eq(paymentsTable.id, payment.id)).returning();
-    if (verified.paid) await tx.update(usersTable).set({ pro: true }).where(eq(usersTable.id, locked.userId));
-    await tx.insert(agentEventsTable).values({
-      userId: locked.userId, agentName: "Pine Labs", inputSummary: `Verify order ${locked.orderId}`,
-      outputJson: { operation: "verify", status: verified.status, order_id: locked.orderId,
-        timestamp: new Date().toISOString(), paid: verified.paid, environment: locked.environment, amount_paise: locked.amount },
-    });
+    if (approved) await tx.update(usersTable).set({ pro: true }).where(eq(usersTable.id, payment.userId));
+    await tx.insert(agentEventsTable).values(paymentAudit(updated!, decision, approved));
     return updated!;
   });
 }

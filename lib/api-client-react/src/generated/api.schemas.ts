@@ -257,6 +257,24 @@ export interface PaymentNotice {
   data?: PaymentNoticeData;
 }
 
+export interface PaymentReferenceInput {
+  /** @pattern ^[0-9]{12}$ */
+  transactionReference: string;
+}
+
+export type PaymentReviewInputDecision = typeof PaymentReviewInputDecision[keyof typeof PaymentReviewInputDecision];
+
+
+export const PaymentReviewInputDecision = {
+  approve: 'approve',
+  reject: 'reject',
+} as const;
+
+export interface PaymentReviewInput {
+  decision: PaymentReviewInputDecision;
+  confirmed: boolean;
+}
+
 export interface Payment {
   id: number;
   userId: number;
@@ -271,6 +289,14 @@ export interface Payment {
   createdAt: string;
   /** @nullable */
   verifiedAt: string | null;
+  /** @nullable */
+  upiUri?: string | null;
+  /** @nullable */
+  upiId?: string | null;
+  /** @nullable */
+  payeeName?: string | null;
+  /** @nullable */
+  transactionReference?: string | null;
 }
 
 export interface AdminReport {
@@ -282,12 +308,4 @@ export interface AdminReport {
   users: User[];
   events: AgentEvent[];
 }
-
-export type PaymentReturnParams = {
-payment: number;
-};
-
-export type PaymentCallbackParams = {
-payment: number;
-};
 

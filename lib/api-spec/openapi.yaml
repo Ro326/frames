@@ -179,40 +179,38 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PaymentLink" }
-  /pay/callback:
-    get:
-      operationId: paymentReturn
-      parameters:
-        - { name: payment, in: query, required: true, schema: { type: integer } }
-      responses:
-        "303": { description: Redirect to verified payment result page }
+  /pay/{id}/reference:
     post:
-      operationId: paymentCallback
+      operationId: submitPaymentReference
       parameters:
-        - { name: payment, in: query, required: true, schema: { type: integer } }
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/PaymentNotice" }
-          application/x-www-form-urlencoded:
-            schema: { $ref: "#/components/schemas/PaymentNotice" }
-      responses:
-        "303": { description: "Notification checked server-side, then redirected to payment result" }
-  /pay/webhook:
-    post:
-      operationId: paymentWebhook
+        - { name: id, in: path, required: true, schema: { type: integer } }
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: "#/components/schemas/PaymentNotice" }
+            schema: { $ref: "#/components/schemas/PaymentReferenceInput" }
       responses:
         "200":
-          description: Provider order queried independently of notification
+          description: Reference recorded for manual review, not proof of payment
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/HealthStatus" }
+              schema: { $ref: "#/components/schemas/Payment" }
+  /admin/payments/{id}/review:
+    post:
+      operationId: reviewPayment
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentReviewInput" }
+      responses:
+        "200":
+          description: Admin manually approved or rejected a payment claim
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
   /pay/{id}:
     get:
       operationId: getPayment
@@ -220,7 +218,7 @@ paths:
         - { name: id, in: path, required: true, schema: { type: integer } }
       responses:
         "200":
-          description: Own payment, verified server-side
+          description: Own payment and manual verification status
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Payment" }
@@ -367,6 +365,17 @@ components:
         orderId: { type: string }
         order_id: { type: string }
         data: { type: object, additionalProperties: true }
+    PaymentReferenceInput:
+      type: object
+      required: [transactionReference]
+      properties:
+        transactionReference: { type: string, pattern: '^[0-9]{12}$' }
+    PaymentReviewInput:
+      type: object
+      required: [decision, confirmed]
+      properties:
+        decision: { type: string, enum: [approve, reject] }
+        confirmed: { type: boolean }
     Payment:
       type: object
       required: [id, userId, merchantReference, orderId, amount, currency, environment, status, paid, createdAt, verifiedAt]
@@ -382,6 +391,10 @@ components:
         paid: { type: boolean }
         createdAt: { type: string }
         verifiedAt: { type: [string, "null"] }
+        upiUri: { type: [string, "null"] }
+        upiId: { type: [string, "null"] }
+        payeeName: { type: [string, "null"] }
+        transactionReference: { type: [string, "null"] }
     CoverageSlot:
       type: object
       required: [slot, status]

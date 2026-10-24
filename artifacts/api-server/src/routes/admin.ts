@@ -3,13 +3,13 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { db, usersTable, projectsTable, agentEventsTable, paymentsTable, eq, and, sql } from "@workspace/db";
 import { count, desc } from "@workspace/db";
-import { paymentResponse } from "../lib/payments";
-import { GetAdminResponse } from "@workspace/api-zod";
+import { paymentResponse, reviewManualPayment } from "../lib/payments";
+import { GetAdminResponse, ReviewPaymentBody } from "@workspace/api-zod";
 import { fail } from "../lib/frames";
 
 export const adminRouter = Router();
-const adminLimit = rateLimit({ windowMs: 15 * 60_000, limit: 15, standardHeaders: "draft-7", legacyHeaders: false });
-adminRouter.get("/admin", adminLimit, async (req, res) => {
+const adminLimit = rateLimit({ windowMs: 15 * 60_000, limit: 15, standardHeaders: "draft-7", legacyHeaders: false, skipSuccessfulRequests: true });
+adminRouter.use("/admin", adminLimit, (req, res, next) => {
   if (!process.env.ADMIN_PASSWORD) fail(503, "Admin access is disabled. Add ADMIN_PASSWORD in project Secrets.");
   const header = req.headers.authorization ?? "";
   const credentials = header.startsWith("Basic ") ? Buffer.from(header.slice(6), "base64").toString() : "";
@@ -18,6 +18,17 @@ adminRouter.get("/admin", adminLimit, async (req, res) => {
   if (!credentials.includes(":") || !timingSafeEqual(hash(password), hash(process.env.ADMIN_PASSWORD))) {
     res.status(401).json({ error: "Incorrect admin password." }); return;
   }
+  next();
+});
+adminRouter.post("/admin/payments/:id/review", async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) fail(400, "Invalid payment reference.");
+  const input = ReviewPaymentBody.parse(req.body);
+  const payment = await reviewManualPayment(id, input.decision, input.confirmed);
+  res.setHeader("Cache-Control", "no-store");
+  res.json(paymentResponse(payment));
+});
+adminRouter.get("/admin", async (req, res) => {
   const [users, events, [userTotal], [projectTotal], [eventTotal], payments, [coverageTotal]] = await Promise.all([
     db.select().from(usersTable).orderBy(desc(usersTable.createdAt)).limit(200),
     db.select().from(agentEventsTable).orderBy(desc(agentEventsTable.timestamp)).limit(300),

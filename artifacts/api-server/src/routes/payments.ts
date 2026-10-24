@@ -1,91 +1,80 @@
 import { randomUUID } from "node:crypto";
-import { Router, type Request } from "express";
+import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { db, paymentsTable, usersTable, eq, and, desc } from "@workspace/db";
+import { db, paymentsTable, usersTable, agentEventsTable, eq, and, desc, sql } from "@workspace/db";
+import { SubmitPaymentReferenceBody } from "@workspace/api-zod";
 import { currentUser, fail } from "../lib/frames";
-import { pineReady, pineRequest, PRO_AMOUNT, validateCheckoutResponse } from "../lib/pinelabs-client";
-import { paymentEvent, paymentResponse, verifyPayment } from "../lib/payments";
+import { paymentAudit, paymentResponse } from "../lib/payments";
+import { upiReady, upiIntent, UPI_ENVIRONMENT, PRO_AMOUNT, storedReference, isDuplicateReference } from "../lib/upi-model";
 
 export const paymentsRouter = Router();
-const checkoutLimit = rateLimit({ windowMs: 15 * 60_000, limit: 10, standardHeaders: "draft-7", legacyHeaders: false });
-const verifyLimit = rateLimit({ windowMs: 60_000, limit: 40, standardHeaders: "draft-7", legacyHeaders: false });
-
-function callbackOrigin(req: Request): string {
-  const configured = process.env.PAYMENT_PUBLIC_URL;
-  const host = req.get("x-forwarded-host")?.split(",")[0]?.trim() || req.get("host");
-  const candidate = new URL(configured || req.get("origin") || `https://${host}`);
-  if (candidate.protocol !== "https:" || candidate.username || candidate.password ||
-    (!configured && candidate.host !== host)) fail(400, "Could not determine the secure payment return URL.");
-  return candidate.origin;
+const checkoutLimit = rateLimit({ windowMs: 15 * 60_000, limit: 15, standardHeaders: "draft-7", legacyHeaders: false });
+const readLimit = rateLimit({ windowMs: 60_000, limit: 60, standardHeaders: "draft-7", legacyHeaders: false });
+function paymentId(value: unknown): number {
+  const id = Number(value);
+  if (!Number.isSafeInteger(id) || id < 1) fail(400, "Invalid payment reference.");
+  return id;
 }
 paymentsRouter.post("/pay", checkoutLimit, async (req, res) => {
   const user = await currentUser(req);
-  if (user.pro) fail(409, "Frames Pro is already active.");
-  if (!pineReady()) fail(503, "Pine Labs UAT checkout needs PINELABS_MERCHANT_ID, PINELABS_CLIENT_ID and PINELABS_CLIENT_SECRET in Secrets, with PINELABS_ENV=uat.");
-  const origin = callbackOrigin(req);
+  if (!upiReady()) fail(503, "UPI checkout needs its receiving account and payee name configured.");
   const payment = await db.transaction(async (tx) => {
-    await tx.select().from(usersTable).where(eq(usersTable.id, user.id)).for("update");
+    const [locked] = await tx.select().from(usersTable).where(eq(usersTable.id, user.id)).for("update");
+    if (!locked || locked.pro) fail(409, "Frames Pro is already active.");
     const [recent] = await tx.select().from(paymentsTable).where(and(
-      eq(paymentsTable.userId, user.id), eq(paymentsTable.environment, "uat"),
+      eq(paymentsTable.userId, user.id), eq(paymentsTable.environment, UPI_ENVIRONMENT),
+      sql`${paymentsTable.status} IN ('AWAITING_PAYMENT', 'PENDING_REVIEW')`,
     )).orderBy(desc(paymentsTable.createdAt)).limit(1);
-    if (recent && Date.now() - recent.createdAt.getTime() < 15 * 60_000) {
-      if (recent.status === "CREATED" && recent.checkoutUrl) return recent;
-      if (recent.status === "CREATING") fail(409, "A checkout is already being prepared. Please try again shortly.");
-    }
+    // Reuse pending claims even after closing checkout; never encourage a second transfer.
+    if (recent) return recent;
+    const merchantReference = `frames-${randomUUID().replaceAll("-", "").slice(0, 24)}`;
     const [created] = await tx.insert(paymentsTable).values({
-      userId: user.id, merchantReference: `frames-${user.id}-${randomUUID()}`, amount: PRO_AMOUNT,
+      userId: user.id, merchantReference, checkoutUrl: upiIntent(merchantReference),
+      amount: PRO_AMOUNT, currency: "INR", environment: UPI_ENVIRONMENT, status: "AWAITING_PAYMENT",
     }).returning();
+    await tx.insert(agentEventsTable).values(paymentAudit(created!, "create"));
     return created!;
   });
-  if (payment.checkoutUrl) { res.json({ url: payment.checkoutUrl, paymentId: payment.id }); return; }
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ url: `/payment/result?payment=${payment.id}`, paymentId: payment.id });
+});
+paymentsRouter.post("/pay/:id/reference", checkoutLimit, async (req, res) => {
+  const user = await currentUser(req);
+  const id = paymentId(req.params.id);
+  const input = SubmitPaymentReferenceBody.parse(req.body);
+  const reference = storedReference(input.transactionReference);
   try {
-    const callback = `${origin}/api/pay/callback?payment=${payment.id}`;
-    const result = validateCheckoutResponse(await pineRequest("/api/checkout/v1/orders", {
-      merchant_order_reference: payment.merchantReference,
-      order_amount: { value: PRO_AMOUNT, currency: "INR" }, integration_mode: "REDIRECT", pre_auth: false,
-      callback_url: callback, failure_callback_url: callback, notes: `Frames Pro user ${user.id}`,
-      purchase_details: { customer: { customer_id: String(user.id), email_id: user.email, first_name: user.name },
-        merchant_metadata: { frames_user_id: String(user.id), product: "frames_pro" } },
-    }));
-    const [saved] = await db.update(paymentsTable).set({
-      orderId: result.order_id, checkoutUrl: result.redirect_url, status: "CREATED",
-    }).where(eq(paymentsTable.id, payment.id)).returning();
-    await paymentEvent(saved!, "CREATED", "create");
-    res.json({ url: result.redirect_url, paymentId: payment.id });
-  } catch {
-    await db.update(paymentsTable).set({ status: "CREATION_FAILED" }).where(eq(paymentsTable.id, payment.id));
-    await paymentEvent(payment, "CREATION_FAILED", "create");
-    fail(502, "Pine Labs could not create checkout. No Pro access has been granted. Check the UAT merchant credentials and try again.");
+    const payment = await db.transaction(async (tx) => {
+      const [locked] = await tx.select().from(paymentsTable).where(and(
+        eq(paymentsTable.id, id), eq(paymentsTable.userId, user.id),
+      )).for("update");
+      if (!locked) fail(404, "Payment not found.");
+      if (locked.environment !== UPI_ENVIRONMENT) fail(409, "This is a legacy payment. Start a new UPI checkout from Studio.");
+      if (locked.status === "PENDING_REVIEW" && locked.orderId === reference) return locked;
+      if (locked.status !== "AWAITING_PAYMENT") fail(409, "This claim has already been submitted or reviewed. Do not pay again.");
+      const [updated] = await tx.update(paymentsTable).set({
+        orderId: reference, status: "PENDING_REVIEW",
+      }).where(eq(paymentsTable.id, id)).returning();
+      // A submitted reference is a claim only: do not modify users.pro here.
+      await tx.insert(agentEventsTable).values(paymentAudit(updated!, "submit_reference"));
+      return updated!;
+    });
+    res.setHeader("Cache-Control", "no-store");
+    res.json(paymentResponse(payment));
+  } catch (error) {
+    if (isDuplicateReference(error)) fail(409, "This UPI reference has already been submitted. Check the reference or wait for the existing payment review.");
+    throw error;
   }
 });
-
-// Notifications are untrusted hints. Never consume their amount/status/user ID
-// as proof: look up our own order and fetch its complete status from Pine Labs.
-paymentsRouter.all("/pay/callback", verifyLimit, async (req, res) => {
-  if (!["GET", "POST"].includes(req.method)) { res.sendStatus(405); return; }
-  const id = Number(req.query.payment);
-  if (!Number.isSafeInteger(id) || id < 1) fail(400, "Invalid payment reference.");
-  const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, id));
-  if (!payment) fail(404, "Payment not found.");
-  try { await verifyPayment(payment); } catch { /* Result page retries server verification, never assumes success. */ }
-  res.setHeader("Cache-Control", "no-store");
-  res.redirect(303, `/payment/result?payment=${payment.id}`);
+// Old provider notifications cannot unlock Pro after switching to manual UPI.
+paymentsRouter.all(["/pay/callback", "/pay/webhook"], (_req, res) => {
+  res.status(410).json({ error: "Provider checkout is disabled. UPI payments require manual admin verification." });
 });
-paymentsRouter.post("/pay/webhook", verifyLimit, async (req, res) => {
-  const orderId = req.body?.data?.order_id ?? req.body?.order_id ?? req.body?.orderId;
-  if (typeof orderId !== "string" || orderId.length > 200) fail(400, "Missing order identifier.");
-  const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.orderId, orderId));
-  if (!payment) fail(404, "Unknown payment order.");
-  await verifyPayment(payment);
-  res.json({ status: "verified" });
-});
-paymentsRouter.get("/pay/:id", verifyLimit, async (req, res) => {
+paymentsRouter.get("/pay/:id", readLimit, async (req, res) => {
   const user = await currentUser(req);
-  const id = Number(req.params.id);
-  if (!Number.isSafeInteger(id) || id < 1) fail(400, "Invalid payment reference.");
+  const id = paymentId(req.params.id);
   const [payment] = await db.select().from(paymentsTable).where(and(eq(paymentsTable.id, id), eq(paymentsTable.userId, user.id)));
   if (!payment) fail(404, "Payment not found.");
   res.setHeader("Cache-Control", "no-store");
-  const confirmed = payment.status === "PROCESSED" && payment.verifiedAt !== null;
-  res.json(paymentResponse(!confirmed && payment.orderId ? await verifyPayment(payment) : payment));
+  res.json(paymentResponse(payment));
 });

@@ -2,15 +2,17 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'wouter';
 import { useGetAdmin, getGetAdminQueryKey } from '@workspace/api-client-react';
 import { Btn, ErrorBox, Field, Logo, Skel, inputCls } from '@/components/kit';
+import { PaymentCard } from '@/components/payment-review';
 import { errInfo } from '@/lib/util';
 
 export default function Admin() {
   const [draft, setDraft] = useState('');
   const [pw, setPw] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const auth = 'Basic ' + btoa(Array.from(new TextEncoder().encode('admin:' + (pw ?? '')), (byte) => String.fromCharCode(byte)).join(''));
   const q = useGetAdmin({
     query: { enabled: pw !== null, queryKey: [...getGetAdminQueryKey(), 'session', attempt], retry: false, staleTime: 0, gcTime: 0, refetchInterval: pw !== null ? 30000 : false },
-    request: { headers: { Authorization: 'Basic ' + btoa(Array.from(new TextEncoder().encode('admin:' + (pw ?? '')), (byte) => String.fromCharCode(byte)).join('')) } },
+    request: { headers: { Authorization: auth } },
   });
   const submit = (e: FormEvent) => { e.preventDefault(); setPw(draft); setAttempt((n) => n + 1); };
   const err = q.isError ? errInfo(q.error) : null;
@@ -36,17 +38,10 @@ export default function Admin() {
               ))}
             </div>
             <section>
-              <h2 className="font-display mb-3 text-3xl font-normal">Pine Labs payments</h2>
-              <p className="mb-3 text-xs text-muted-foreground">UAT test orders · Pro is granted only after server-side verification. Latest 200 orders.</p>
-              {q.data.payments.length === 0 ? <p className="rounded-md border border-dashed border-white/15 p-5 text-sm text-muted-foreground">No payment orders yet.</p> :
-                <div className="overflow-x-auto rounded-md border border-border"><table className="w-full min-w-[680px] text-left text-sm" data-testid="table-payments">
-                  <thead><tr className="border-b border-border font-normal">{['User', 'Order', 'Amount', 'Status', 'Verified', 'Created'].map((label) => <th key={label} className="p-3 font-normal">{label}</th>)}</tr></thead>
-                  <tbody>{q.data.payments.map((payment) => <tr key={payment.id} className="border-b border-border">
-                    <td className="p-3">{payment.userId}</td><td className="p-3 font-mono text-xs">{payment.orderId ?? payment.merchantReference}</td>
-                    <td className="p-3">₹{(payment.amount / 100).toFixed(2)} / {payment.environment}</td><td className="p-3">{payment.status}</td>
-                    <td className="p-3">{payment.paid ? 'Paid · Pro unlocked' : payment.verifiedAt ? 'Not paid' : 'Not yet'}</td><td className="p-3">{new Date(payment.createdAt).toLocaleString()}</td>
-                  </tr>)}</tbody>
-                </table></div>}
+              <h2 className="font-display mb-3 text-3xl font-normal">UPI payments</h2>
+              <p className="mb-3 text-xs text-muted-foreground">Manual UPI. Pro is granted only when you approve against the real receipt. Latest 200.</p>
+              {q.data.payments.length === 0 ? <p className="rounded-md border border-dashed border-white/15 p-5 text-sm text-muted-foreground">No payment requests yet.</p> :
+                <ul className="divide-y divide-border rounded-md border border-border" data-testid="table-payments">{q.data.payments.map((payment) => <PaymentCard key={payment.id} payment={payment} auth={auth} />)}</ul>}
             </section>
             <section>
               <h2 className="font-display mb-3 text-3xl font-normal">Users</h2>
