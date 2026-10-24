@@ -12,6 +12,7 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
   const check = useCheckFrames();
   const decide = useDecideShot();
   const input = useRef<HTMLInputElement>(null);
+  const cameraInput = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<'idle' | 'frames' | 'check'>('idle');
   const [err, setErr] = useState<string | null>(null);
   const [url, setUrl] = useState<string | null>(null);
@@ -83,9 +84,11 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
       {busy && <p className="font-mono mt-3 flex items-center gap-2 text-xs tracking-[0.04em] text-primary"><span className="rec-dot size-2 rounded-full bg-primary" />{phase === 'frames' ? 'Pulling frames from clip' : 'Director is reviewing'}</p>}
       {err && <div className="mt-3"><ErrorBox msg={err} onRetry={hasLocal ? retry : undefined} /></div>}
       {url && <video src={url} controls playsInline className="mt-3 max-h-80 w-full rounded-md bg-black" data-testid={'video-preview-' + index} />}
-      <input ref={input} type="file" accept="video/*" capture="environment" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ''; }} data-testid={'input-clip-' + index} />
+      <input ref={input} type="file" accept="video/*,.mp4,.mov,.m4v,.webm" aria-label="Choose a video from your gallery" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ''; }} data-testid={'input-clip-' + index} />
+      <input ref={cameraInput} type="file" accept="video/*" capture="environment" aria-label="Record a new video" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ''; }} data-testid={'input-camera-' + index} />
       <div className="mt-3 grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 sm:flex sm:flex-wrap">
-        <Btn variant={hasLocal ? 'ghost' : 'solid'} disabled={busy} onClick={() => input.current?.click()} data-testid={'button-upload-' + index}>{hasLocal ? <><Upload size={16} /> Replace clip</> : <><Camera size={16} /> Film or upload</>}</Btn>
+        <Btn variant={hasLocal ? 'ghost' : 'solid'} disabled={busy} onClick={() => input.current?.click()} data-testid={'button-upload-' + index}><Upload size={16} /> {hasLocal ? 'Replace from gallery' : 'Choose from gallery'}</Btn>
+        <Btn variant="line" disabled={busy} onClick={() => cameraInput.current?.click()} data-testid={'button-record-' + index}><Camera size={16} /> Record video</Btn>
         {hasLocal && <Btn variant="ghost" onClick={preview} data-testid={'button-preview-' + index}><Eye size={16} /> {url ? 'Hide' : 'Preview'}</Btn>}
         {hasLocal && !shot.verdict && !busy && <Btn variant="line" onClick={retry} data-testid={'button-check-' + index}>Check with director</Btn>}
         {v && !shot.approved && <Btn variant="ghost" disabled={busy} loading={decide.isPending} onClick={() => decision('override')} data-testid={'button-override-' + index}><Check size={16} /> Approve anyway</Btn>}
