@@ -26,7 +26,7 @@ adminRouter.get("/admin", adminLimit, async (req, res) => {
     db.select({ total: count() }).from(agentEventsTable),
     db.select().from(paymentsTable).orderBy(desc(paymentsTable.createdAt)).limit(200),
     db.select({ total: count() }).from(agentEventsTable).where(and(
-      eq(agentEventsTable.agentName, "AgenticOrg Coverage Producer"),
+      sql`${agentEventsTable.agentName} IN ('AgenticOrg Director', 'AgenticOrg Coverage Producer')`,
       sql`${agentEventsTable.outputJson}->>'attempted' = 'true'`,
     )),
   ]);

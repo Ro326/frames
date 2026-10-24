@@ -114,7 +114,7 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
       </button>
       {err && <ErrorBox msg={err} />}
       <Btn type="submit" loading={busy} className="w-full" data-testid="button-create-project">
-        {phase === 'creating' ? 'Opening the project' : phase === 'directing' ? 'Director is planning your shots' : manual ? <><PenLine size={18} /> Create blank plan</> : <><Sparkles size={18} /> Direct my shoot</>}
+        {phase === 'creating' ? 'Opening the project' : phase === 'directing' ? 'AgenticOrg Director is planning' : manual ? <><PenLine size={18} /> Create blank plan</> : <><Sparkles size={18} /> Direct my shoot</>}
       </Btn>
     </form>
   );

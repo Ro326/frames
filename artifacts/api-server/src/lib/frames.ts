@@ -20,7 +20,7 @@ export async function currentUser(req: Request) {
 export function projectResponse(project: StoredProject) {
   return GetProjectResponse.parse({
     ...project,
-    coverage: project.coverage ?? localCoverage({ shots: GetProjectResponse.shape.shots.parse(project.shots) }),
+    coverage: localCoverage({ shots: GetProjectResponse.shape.shots.parse(project.shots) }),
     createdAt: project.createdAt.toISOString(),
     approvedAt: project.approvedAt?.toISOString() ?? null,
   });

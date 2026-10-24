@@ -5,6 +5,7 @@ import { desc, eq } from "@workspace/db";
 import { SaveProfileBody, SaveProfileResponse, GetMeResponse, GetActivityResponse } from "@workspace/api-zod";
 import { currentUser, fail } from "../lib/frames";
 import { pineReady } from "../lib/pinelabs-client";
+import { directorReady } from "../lib/agenticorg-director";
 
 export const accountRouter = Router();
 
@@ -45,11 +46,11 @@ accountRouter.get("/activity", async (req, res) => {
 
 accountRouter.get("/status", (_req, res) => {
   res.json({
-    ai: !!process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL,
+    ai: directorReady(),
     voiceover: !!process.env.ELEVENLABS_API_KEY,
     payments: pineReady(),
     paymentMode: "uat",
-    coverage: !!(process.env.AGENTICORG_API_KEY && process.env.AGENTICORG_BASE_URL && process.env.AGENTICORG_AGENT_ID),
+    coverage: false,
     admin: !!process.env.ADMIN_PASSWORD,
   });
 });

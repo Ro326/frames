@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { eq, and } from "@workspace/db";
 import { db, projectsTable, agentEventsTable } from "@workspace/db";
-import { aiClient } from "../lib/anthropic";
+import { runAgenticOrgDirector, redactAgenticOrg, type DirectorTrace } from "../lib/agenticorg-director";
 import { DIRECTOR_PROMPT } from "../../../../server/prompts.js";
 import { requestAgentJson } from "../lib/json-agent";
 import { directorOutputSchema, directorPlan } from "../lib/director-output";
@@ -13,19 +13,20 @@ directorRouter.post("/projects/:id/direct", async (req, res) => {
   const { user, row } = await ownedProject(req);
   if (row.approvedAt) fail(409, "Edit your plan before generating a replacement.");
   const inputSummary = `Project ${row.id}: ${row.niche}, ${row.targetLength}s, ${row.vibe}. ${row.brief}`.slice(0, 1200);
+  let trace: DirectorTrace = { attempted: false };
   const output = await requestAgentJson({
-    call: () => aiClient().messages.create({
-      model: "claude-sonnet-5-5",
-      max_tokens: 8192,
-      system: DIRECTOR_PROMPT,
-      messages: [{ role: "user", content: JSON.stringify({
+    call: () => {
+      trace = { attempted: false };
+      return runAgenticOrgDirector({
         brief: row.brief, niche: row.niche, length: row.targetLength, vibe: row.vibe,
-      }) }],
-    }, { maxRetries: 0 }),
+      }, DIRECTOR_PROMPT, trace);
+    },
     validate: (response) => directorOutputSchema.parse(response),
     audit: async (event) => {
       await db.insert(agentEventsTable).values({
-        userId: user.id, agentName: "Director", inputSummary, outputJson: event, humanDecision: null,
+        userId: user.id, agentName: "AgenticOrg Director", inputSummary,
+        outputJson: redactAgenticOrg({ ...event, ...trace, provider: "AgenticOrg", timestamp: new Date().toISOString() }) as Record<string, unknown>,
+        humanDecision: null,
       });
     },
   });

@@ -33,6 +33,8 @@ export default function ProjectPage() {
     direct.mutate({ id }, { onSuccess: (d) => { qc.setQueryData(getGetProjectQueryKey(id), d); qc.invalidateQueries({ queryKey: getListProjectsQueryKey() }); } });
   };
   const needsDirect = p.shots.length === 0 && !p.manual;
+  const directorError = direct.isError ? errInfo(direct.error).msg : previousDirectorError;
+  const awaitingReview = !!directorError?.includes('waiting for human review');
 
   return (
     <Shell>
@@ -54,10 +56,11 @@ export default function ProjectPage() {
           {needsDirect && (
             <div className="mb-6 space-y-3 rounded-md border border-primary/40 bg-primary/10 p-4">
               <p className="font-normal">No shot list yet.</p>
-              <p className="text-sm text-muted-foreground">Ask the AI director to plan this shoot, or add shots by hand below.</p>
-              {(direct.isError || previousDirectorError) && !direct.isPending && <ErrorBox msg={direct.isError ? errInfo(direct.error).msg : previousDirectorError!} onRetry={runDirect} />}
-              <Btn loading={direct.isPending} onClick={runDirect} data-testid="button-direct"><Sparkles size={16} /> {direct.isPending ? 'Planning your shots…' : 'Direct my shoot'}</Btn>
-              {direct.isPending && <p role="status" className="text-sm text-muted-foreground">This can take about 30 seconds. Keep this page open.</p>}
+              <p className="text-sm text-muted-foreground">Ask your AgenticOrg Frames Director to plan this shoot, or add shots by hand below.</p>
+              {directorError && !direct.isPending && <ErrorBox msg={directorError} onRetry={awaitingReview ? undefined : runDirect} />}
+              {awaitingReview && <a href="https://agenticorg.hackathon.pinelabs.com/dashboard" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center text-sm text-primary underline underline-offset-4" data-testid="link-agenticorg-review">Open AgenticOrg dashboard to review the run</a>}
+              <Btn loading={direct.isPending} disabled={awaitingReview} onClick={runDirect} data-testid="button-direct"><Sparkles size={16} /> {direct.isPending ? 'Planning your shots…' : awaitingReview ? 'Awaiting AgenticOrg review' : 'Direct my shoot'}</Btn>
+              {direct.isPending && <p role="status" className="text-sm text-muted-foreground">The AgenticOrg Director is planning your shots. This can take a minute or two; keep this page open.</p>}
             </div>
           )}
           <PlanEditor key={p.id + ':' + p.status + ':' + p.shots.length + ':' + (p.approvedAt ?? '')} project={p} />
