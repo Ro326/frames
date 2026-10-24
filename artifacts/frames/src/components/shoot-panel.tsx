@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Camera, Check, Eye, RotateCcw, Upload } from 'lucide-react';
 import { useCheckFrames, useDecideShot, getGetProjectQueryKey, getListProjectsQueryKey, type Project, type Shot } from '@workspace/api-client-react';
 import { Btn, ErrorBox } from '@/components/kit';
+import { ShotGuide } from '@/components/shot-guide';
 import { delClip, extractFrames, getClip, listClipIds, putClip } from '@/lib/clips';
 import { errInfo } from '@/lib/util';
 
@@ -69,6 +70,7 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
       </div>
       <p className="mt-2 font-normal">{shot.description}</p>
       <p className="mt-1 text-sm text-muted-foreground">{[shot.angle, shot.movement].filter(Boolean).join(' / ')}{shot.props.length ? ' / ' + shot.props.join(', ') : ''}</p>
+      <ShotGuide idPrefix={'shoot-' + index} shot={{ description: shot.description, angle: shot.angle, movement: shot.movement, props: shot.props }} />
       {shot.tip && <p className="mt-2 border-l-2 border-primary pl-3 text-sm">{shot.tip}</p>}
       {next && !hasLocal && <p className="font-display mt-3 text-2xl font-normal text-destructive" data-testid="text-shoot-next">Shoot this next</p>}
       {v && (

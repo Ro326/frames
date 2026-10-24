@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ArrowDown, ArrowUp, Lock, Plus, Trash2 } from 'lucide-react';
 import { useUpdateProject, useApprovePlan, getGetProjectQueryKey, getListProjectsQueryKey, type Project, type Shot } from '@workspace/api-client-react';
 import { Btn, ErrorBox, Field, inputCls } from '@/components/kit';
+import { ShotGuide } from '@/components/shot-guide';
 import { errInfo } from '@/lib/util';
 
 function PropsInput({ value, disabled, onCommit }: { value: string[]; disabled: boolean; onCommit: (v: string[]) => void }) {
@@ -66,6 +67,7 @@ export function PlanEditor({ project }: { project: Project }) {
               <Field label="Props (comma separated)"><PropsInput value={s.props} disabled={locked} onCommit={(v) => patch(i, { props: v })} /></Field>
               <div className="sm:col-span-2"><Field label="Director's tip"><input disabled={locked} className={inputCls} value={s.tip} onChange={(e) => patch(i, { tip: e.target.value })} data-testid={'input-tip-' + i} /></Field></div>
             </div>
+            <ShotGuide idPrefix={'plan-' + i} shot={{ description: s.description, angle: s.angle, movement: s.movement, props: s.props }} />
           </li>
         ))}
       </ol>
