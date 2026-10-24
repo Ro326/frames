@@ -30,11 +30,11 @@ function Voiceover({ project }: { project: Project }) {
   };
   return (
     <section className="space-y-3 rounded-md border border-border bg-card p-4">
-      <h3 className="font-display text-3xl font-bold">Voiceover</h3>
+      <h3 className="font-display text-3xl font-normal">Voiceover</h3>
       <p className="max-h-40 overflow-auto whitespace-pre-wrap text-sm text-muted-foreground">{project.voiceover || 'No script yet.'}</p>
       {err && <ErrorBox msg={err} onRetry={gen} />}
-      {url && <><audio controls src={url} className="w-full" data-testid="audio-voiceover" /><a href={url} download={'voiceover_' + project.id + '.mp3'} data-testid="link-download-mp3" className="tap inline-flex min-h-12 items-center gap-2 rounded-md bg-secondary px-5 font-bold"><Download size={16} /> Download MP3</a></>}
-      <Btn variant={url ? 'ghost' : 'amber'} loading={busy} disabled={!project.voiceover.trim()} onClick={gen} data-testid="button-generate-voiceover"><Mic size={16} /> {url ? 'Regenerate' : 'Generate voiceover'}</Btn>
+      {url && <><audio controls src={url} className="w-full" data-testid="audio-voiceover" /><a href={url} download={'voiceover_' + project.id + '.mp3'} data-testid="link-download-mp3" className="tap inline-flex min-h-12 items-center gap-2 rounded-md bg-secondary px-5 font-normal"><Download size={16} /> Download MP3</a></>}
+      <Btn variant={url ? 'ghost' : 'solid'} loading={busy} disabled={!project.voiceover.trim()} onClick={gen} data-testid="button-generate-voiceover"><Mic size={16} /> {url ? 'Regenerate' : 'Generate voiceover'}</Btn>
     </section>
   );
 }
@@ -48,7 +48,7 @@ export function EditPanel({ project }: { project: Project }) {
   if (!ready) return (
     <div className="rounded-md border border-dashed border-white/20 p-10 text-center" data-testid="edit-locked">
       <Lock className="mx-auto mb-3 text-muted-foreground" />
-      <h3 className="font-display text-3xl font-bold">Edit table locked</h3>
+      <h3 className="font-display text-3xl font-normal">Edit table locked</h3>
       <p className="mt-2 text-muted-foreground">Approve every shot to unlock the edit table and the ZIP. {shots.filter((s) => s.approved).length}/{shots.length} done.</p>
     </div>
   );
@@ -85,7 +85,7 @@ export function EditPanel({ project }: { project: Project }) {
     <div className="space-y-6">
       <div className="overflow-x-auto rounded-md border border-border">
         <table className="w-full min-w-[520px] text-left text-sm" data-testid="table-edit">
-          <thead className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground"><tr>{['#', 'Section', 'Shot', 'Dur', 'Clip'].map((h) => <th key={h} className="p-3">{h}</th>)}</tr></thead>
+          <thead className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground"><tr>{['#', 'Section', 'Shot', 'Dur', 'Clip'].map((h) => <th key={h} className="p-3">{h}</th>)}</tr></thead>
           <tbody>{shots.map((s, i) => <tr key={s.id} className="border-t border-border"><td className="p-3 font-mono text-primary">{pad(i + 1)}</td><td className="p-3">{s.section}</td><td className="p-3">{s.description}</td><td className="p-3 font-mono">{s.duration}s</td><td className="p-3 text-muted-foreground">{s.clipName ?? '-'}</td></tr>)}</tbody>
         </table>
       </div>

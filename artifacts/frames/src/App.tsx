@@ -34,35 +34,35 @@ const clerkAppearance = {
     logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
   },
   variables: {
-    colorPrimary: '#F5A524',
-    colorForeground: '#F4F1EA',
-    colorMutedForeground: '#A39E96',
+    colorPrimary: '#5B9BFF',
+    colorForeground: '#F7F7F8',
+    colorMutedForeground: '#A5A9B1',
     colorDanger: '#EF4B43',
-    colorBackground: '#0f0e0c',
-    colorInput: '#050504',
-    colorInputForeground: '#F4F1EA',
-    colorNeutral: '#F4F1EA',
+    colorBackground: '#0b0c0e',
+    colorInput: '#050506',
+    colorInputForeground: '#F7F7F8',
+    colorNeutral: '#F7F7F8',
     fontFamily: "'DM Sans', sans-serif",
     borderRadius: '0.375rem',
   },
   elements: {
     rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#0f0e0c] border border-white/15 rounded-md w-[440px] max-w-full overflow-hidden',
+    cardBox: 'bg-[#0b0c0e] border border-white/15 rounded-md w-[440px] max-w-full overflow-hidden',
     card: '!shadow-none !border-0 !bg-transparent !rounded-none',
     footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    headerTitle: { fontFamily: "'Barlow Condensed', sans-serif", textTransform: 'uppercase', fontSize: '30px', color: '#F4F1EA', letterSpacing: '0.02em' },
-    headerSubtitle: { color: '#A39E96' },
-    socialButtonsBlockButtonText: { color: '#F4F1EA' },
-    formFieldLabel: { color: '#F4F1EA' },
-    footerActionLink: { color: '#F5A524' },
-    footerActionText: { color: '#A39E96' },
-    dividerText: { color: '#A39E96' },
-    identityPreviewEditButton: { color: '#F5A524' },
-    formFieldSuccessText: { color: '#F4F1EA' },
-    alertText: { color: '#F4F1EA' },
+    headerTitle: { fontFamily: "'Outfit', sans-serif", fontWeight: 300, fontSize: '28px', color: '#F7F7F8', letterSpacing: '-0.01em' },
+    headerSubtitle: { color: '#A5A9B1' },
+    socialButtonsBlockButtonText: { color: '#F7F7F8' },
+    formFieldLabel: { color: '#F7F7F8' },
+    footerActionLink: { color: '#5B9BFF' },
+    footerActionText: { color: '#A5A9B1' },
+    dividerText: { color: '#A5A9B1' },
+    identityPreviewEditButton: { color: '#5B9BFF' },
+    formFieldSuccessText: { color: '#F7F7F8' },
+    alertText: { color: '#F7F7F8' },
     logoBox: { height: '48px' },
     logoImage: { height: '48px' },
-    formButtonPrimary: { color: '#0b0a09', fontWeight: 700, minHeight: '48px' },
+    formButtonPrimary: { backgroundColor: '#F7F7F8', color: '#0b0c0e', fontWeight: 400, minHeight: '48px' },
     formFieldInput: { minHeight: '48px' },
     socialButtonsBlockButton: { minHeight: '48px', borderColor: 'rgba(255,255,255,0.2)' },
   },
@@ -74,7 +74,7 @@ function AuthFrame({ children, line }: { children: ReactNode; line: string }) {
       <div className="pointer-events-none absolute inset-y-0 left-6 hidden w-3 sm:block sprockets" style={{ height: '100%', backgroundImage: 'repeating-linear-gradient(180deg, hsl(var(--border)) 0 14px, transparent 14px 30px)', width: 8 }} />
       <div className="relative z-10 flex w-full flex-col items-center gap-6">
         <a href={basePath || '/'} data-testid="link-home"><Logo size={34} /></a>
-        <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{line}</p>
+        <p className="font-mono text-[11px] tracking-[0.08em] text-muted-foreground">{line}</p>
         {children}
       </div>
     </div>

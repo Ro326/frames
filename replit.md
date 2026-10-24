@@ -7,7 +7,7 @@ Mobile-first AI shoot director for creators filming on their phones.
 - Signup collects name, verified email, and phone with creation timestamp.
 - Creators write a brief or manually build a plan, edit shots, approve, upload footage for AI checks, and export an editing pack.
 - Real user and agent-event records are evidence for judges. Never seed fake users, approvals, or agent events.
-- Brand: FRAMES, black, white, amber #F5A524, cinematic, film-frame logo, large tap targets.
+- Brand: FRAMES, a simple black-and-white palette with subtle blue design accents, sleek regular/light typography (not bold), film-frame logo, large tap targets.
 - Free includes one project; Pro is unlimited at ₹49 through Pine Labs.
 
 ## Run & Operate

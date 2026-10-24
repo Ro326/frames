@@ -49,7 +49,7 @@ export function PlanEditor({ project }: { project: Project }) {
         {shots.map((s, i) => (
           <li key={s.id} className="rounded-md border border-border bg-card p-4" data-testid={'card-shot-' + i}>
             <div className="mb-3 flex items-center justify-between">
-              <span className="font-display text-3xl font-bold text-primary">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-display text-3xl font-normal text-primary">{String(i + 1).padStart(2, '0')}</span>
               {!locked && <div className="flex gap-1">
                 <button aria-label="Move up" data-testid={'button-up-' + i} disabled={i === 0} onClick={() => { move(i, -1); setDirty(true); }} className="tap grid size-12 place-items-center rounded-md bg-secondary disabled:opacity-30"><ArrowUp size={18} /></button>
                 <button aria-label="Move down" data-testid={'button-down-' + i} disabled={i === shots.length - 1} onClick={() => { move(i, 1); setDirty(true); }} className="tap grid size-12 place-items-center rounded-md bg-secondary disabled:opacity-30"><ArrowDown size={18} /></button>

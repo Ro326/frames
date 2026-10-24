@@ -30,13 +30,13 @@ export default function ProjectPage() {
 
   return (
     <Shell>
-      <Link href="/studio" data-testid="link-back" className="tap mb-4 inline-flex min-h-12 items-center gap-2 font-mono text-xs uppercase tracking-widest text-muted-foreground hover:text-foreground"><ArrowLeft size={16} /> Studio</Link>
-      <h1 className="font-display text-5xl font-bold leading-[0.95] sm:text-7xl" data-testid="text-project-title">{p.title}</h1>
+      <Link href="/studio" data-testid="link-back" className="tap mb-4 inline-flex min-h-12 items-center gap-2 font-mono text-xs tracking-[0.04em] text-muted-foreground hover:text-foreground"><ArrowLeft size={16} /> Studio</Link>
+      <h1 className="font-display text-4xl font-normal leading-[1.05] sm:text-4xl" data-testid="text-project-title">{p.title}</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">{p.brief}</p>
-      <p className="font-mono mt-2 text-[11px] uppercase tracking-widest text-primary">{p.niche} / {fmtDur(p.targetLength)} / {p.vibe} / {p.status}</p>
+      <p className="font-mono mt-2 text-[11px] tracking-[0.04em] text-primary">{p.niche} / {fmtDur(p.targetLength)} / {p.vibe} / {p.status}</p>
       <div className="sticky top-16 z-30 -mx-4 mt-6 mb-6 flex border-b border-border bg-background/90 px-4 backdrop-blur" role="tablist">
         {tabs.map((t) => (
-          <button key={t.k} role="tab" aria-selected={active === t.k} data-testid={'tab-' + t.k} onClick={() => setTab(t.k)} className={`tap relative min-h-14 flex-1 font-display text-2xl font-bold tracking-wider transition-colors ${active === t.k ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+          <button key={t.k} role="tab" aria-selected={active === t.k} data-testid={'tab-' + t.k} onClick={() => setTab(t.k)} className={`tap relative min-h-14 flex-1 font-display text-2xl font-normal tracking-[0.04em]r transition-colors ${active === t.k ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
             {t.l}
             {active === t.k && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
           </button>
@@ -46,7 +46,7 @@ export default function ProjectPage() {
         <>
           {needsDirect && (
             <div className="mb-6 space-y-3 rounded-md border border-primary/40 bg-primary/10 p-4">
-              <p className="font-bold">No shot list yet.</p>
+              <p className="font-normal">No shot list yet.</p>
               <p className="text-sm text-muted-foreground">Ask the AI director to plan this shoot, or add shots by hand below.</p>
               {direct.isError && <ErrorBox msg={errInfo(direct.error).msg} onRetry={runDirect} />}
               <Btn loading={direct.isPending} onClick={runDirect} data-testid="button-direct"><Sparkles size={16} /> Direct my shoot</Btn>

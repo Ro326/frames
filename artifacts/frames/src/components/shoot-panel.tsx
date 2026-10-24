@@ -64,26 +64,26 @@ function ShotCard({ project, shot, index, next, hasLocal, onLocal }: { project: 
   return (
     <li className={`rounded-md border bg-card p-4 transition ${next ? 'border-primary' : 'border-border'}`} data-testid={'card-shoot-' + index}>
       <div className="flex items-start justify-between gap-3">
-        <div><span className="font-display text-3xl font-bold text-primary">{String(index + 1).padStart(2, '0')}</span> <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">{shot.section} / {shot.type} / {shot.duration}s</span></div>
-        {shot.approved ? <span className="font-mono rounded-sm bg-emerald-500/15 px-2 py-1 text-[10px] uppercase tracking-widest text-emerald-400">Approved</span> : !hasLocal && !shot.clipName ? <span className="font-mono rounded-sm bg-destructive/15 px-2 py-1 text-[10px] uppercase tracking-widest text-destructive">Missing</span> : null}
+        <div><span className="font-display text-3xl font-normal text-primary">{String(index + 1).padStart(2, '0')}</span> <span className="font-mono text-[11px] tracking-[0.04em] text-muted-foreground">{shot.section} / {shot.type} / {shot.duration}s</span></div>
+        {shot.approved ? <span className="font-mono rounded-sm bg-emerald-500/15 px-2 py-1 text-[10px] tracking-[0.04em] text-emerald-400">Approved</span> : !hasLocal && !shot.clipName ? <span className="font-mono rounded-sm bg-destructive/15 px-2 py-1 text-[10px] tracking-[0.04em] text-destructive">Missing</span> : null}
       </div>
-      <p className="mt-2 font-medium">{shot.description}</p>
+      <p className="mt-2 font-normal">{shot.description}</p>
       <p className="mt-1 text-sm text-muted-foreground">{[shot.angle, shot.movement].filter(Boolean).join(' / ')}{shot.props.length ? ' / ' + shot.props.join(', ') : ''}</p>
       {shot.tip && <p className="mt-2 border-l-2 border-primary pl-3 text-sm">{shot.tip}</p>}
-      {next && !hasLocal && <p className="font-display mt-3 text-2xl font-bold text-destructive" data-testid="text-shoot-next">Shoot this next</p>}
+      {next && !hasLocal && <p className="font-display mt-3 text-2xl font-normal text-destructive" data-testid="text-shoot-next">Shoot this next</p>}
       {v && (
         <div className={`mt-3 rounded-md border p-3 ${v.match ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-primary/60 bg-primary/10'}`} data-testid={'verdict-' + index}>
-          <p className={`font-display text-2xl font-bold ${v.match ? 'text-emerald-400' : 'text-primary'}`}>{v.match ? 'Go ahead' : 'Fix before you move on'} <span className="font-mono text-xs font-normal text-muted-foreground">{Math.round(v.confidence * 100)}%</span></p>
+          <p className={`font-display text-2xl font-normal ${v.match ? 'text-emerald-400' : 'text-primary'}`}>{v.match ? 'Go ahead' : 'Fix before you move on'} <span className="font-mono text-xs font-normal text-muted-foreground">{Math.round(v.confidence * 100)}%</span></p>
           <p className="mt-1 text-sm">{v.verdict}</p>
           {!v.match && v.fix && <p className="mt-1 text-sm text-primary">Fix: {v.fix}</p>}
         </div>
       )}
-      {busy && <p className="font-mono mt-3 flex items-center gap-2 text-xs uppercase tracking-widest text-primary"><span className="rec-dot size-2 rounded-full bg-primary" />{phase === 'frames' ? 'Pulling frames from clip' : 'Director is reviewing'}</p>}
+      {busy && <p className="font-mono mt-3 flex items-center gap-2 text-xs tracking-[0.04em] text-primary"><span className="rec-dot size-2 rounded-full bg-primary" />{phase === 'frames' ? 'Pulling frames from clip' : 'Director is reviewing'}</p>}
       {err && <div className="mt-3"><ErrorBox msg={err} onRetry={hasLocal ? retry : undefined} /></div>}
       {url && <video src={url} controls playsInline className="mt-3 max-h-80 w-full rounded-md bg-black" data-testid={'video-preview-' + index} />}
       <input ref={input} type="file" accept="video/*" capture="environment" hidden onChange={(e) => { onFile(e.target.files?.[0]); e.target.value = ''; }} data-testid={'input-clip-' + index} />
       <div className="mt-3 flex flex-wrap gap-2">
-        <Btn variant={hasLocal ? 'ghost' : 'amber'} disabled={busy} onClick={() => input.current?.click()} data-testid={'button-upload-' + index}>{hasLocal ? <><Upload size={16} /> Replace clip</> : <><Camera size={16} /> Film or upload</>}</Btn>
+        <Btn variant={hasLocal ? 'ghost' : 'solid'} disabled={busy} onClick={() => input.current?.click()} data-testid={'button-upload-' + index}>{hasLocal ? <><Upload size={16} /> Replace clip</> : <><Camera size={16} /> Film or upload</>}</Btn>
         {hasLocal && <Btn variant="ghost" onClick={preview} data-testid={'button-preview-' + index}><Eye size={16} /> {url ? 'Hide' : 'Preview'}</Btn>}
         {hasLocal && !shot.verdict && !busy && <Btn variant="line" onClick={retry} data-testid={'button-check-' + index}>Check with director</Btn>}
         {v && !shot.approved && <Btn variant="ghost" disabled={busy} loading={decide.isPending} onClick={() => decision('override')} data-testid={'button-override-' + index}><Check size={16} /> Approve anyway</Btn>}
@@ -105,7 +105,7 @@ export function ShootPanel({ project }: { project: Project }) {
   return (
     <div className="space-y-5">
       <div className="rounded-md border border-border bg-card p-4">
-        <div className="flex items-end justify-between"><p className="font-display text-4xl font-bold" data-testid="text-coverage">{covered}/{shots.length} <span className="text-lg text-muted-foreground">covered</span></p><p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">{approved} approved</p></div>
+        <div className="flex items-end justify-between"><p className="font-display text-3xl font-normal" data-testid="text-coverage">{covered}/{shots.length} <span className="text-lg text-muted-foreground">covered</span></p><p className="font-mono text-xs tracking-[0.04em] text-muted-foreground">{approved} approved</p></div>
         <div className="mt-3 flex gap-1">{shots.map((s) => <span key={s.id} className={`h-2 flex-1 rounded-sm transition-colors ${s.approved ? 'bg-emerald-500' : s.verdict || s.clipName ? 'bg-primary' : 'bg-destructive/70'}`} />)}</div>
         <p className="mt-3 text-xs text-muted-foreground">Clips stay on this device, stored in your browser. Only three still frames per clip are sent for review. Clearing browser data deletes them.</p>
       </div>

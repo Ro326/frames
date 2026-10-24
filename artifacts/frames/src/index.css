@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400&family=DM+Sans:wght@300;400&family=JetBrains+Mono:wght@300;400&display=swap');
 @layer theme, base, clerk, components, utilities;
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -75,36 +75,36 @@
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255,0.04);
   --elevate-2: rgba(255,255,255,0.09);
-  --background: 30 6% 4%;
-  --foreground: 40 20% 96%;
-  --border: 30 5% 16%;
-  --card: 30 6% 7%;
-  --card-foreground: 40 20% 96%;
-  --card-border: 30 5% 16%;
-  --sidebar: 30 6% 5%;
-  --sidebar-foreground: 40 20% 96%;
-  --sidebar-border: 30 5% 16%;
-  --sidebar-primary: 38 91% 55%;
-  --sidebar-primary-foreground: 30 6% 4%;
-  --sidebar-accent: 30 5% 12%;
-  --sidebar-accent-foreground: 40 20% 96%;
-  --sidebar-ring: 38 91% 55%;
-  --popover: 30 6% 8%;
-  --popover-foreground: 40 20% 96%;
-  --popover-border: 30 5% 16%;
-  --primary: 38 91% 55%;
-  --primary-foreground: 30 6% 4%;
-  --secondary: 30 5% 12%;
-  --secondary-foreground: 40 20% 96%;
-  --muted: 30 5% 11%;
-  --muted-foreground: 35 6% 62%;
-  --accent: 38 91% 55%;
-  --accent-foreground: 30 6% 4%;
+  --background: 220 10% 4%;
+  --foreground: 0 0% 97%;
+  --border: 220 6% 16%;
+  --card: 220 8% 7%;
+  --card-foreground: 0 0% 97%;
+  --card-border: 220 6% 16%;
+  --sidebar: 220 8% 5%;
+  --sidebar-foreground: 0 0% 97%;
+  --sidebar-border: 220 6% 16%;
+  --sidebar-primary: 217 91% 64%;
+  --sidebar-primary-foreground: 220 10% 4%;
+  --sidebar-accent: 220 6% 12%;
+  --sidebar-accent-foreground: 0 0% 97%;
+  --sidebar-ring: 217 91% 64%;
+  --popover: 220 8% 8%;
+  --popover-foreground: 0 0% 97%;
+  --popover-border: 220 6% 16%;
+  --primary: 217 91% 64%;
+  --primary-foreground: 220 10% 4%;
+  --secondary: 220 6% 12%;
+  --secondary-foreground: 0 0% 97%;
+  --muted: 220 6% 11%;
+  --muted-foreground: 220 5% 66%;
+  --accent: 217 91% 64%;
+  --accent-foreground: 220 10% 4%;
   --destructive: 2 78% 56%;
-  --destructive-foreground: 40 20% 96%;
-  --input: 30 5% 22%;
-  --ring: 38 91% 55%;
-  --chart-1: 38 91% 55%; --chart-2: 40 20% 96%; --chart-3: 2 78% 56%; --chart-4: 150 50% 48%; --chart-5: 35 6% 62%;
+  --destructive-foreground: 0 0% 97%;
+  --input: 220 6% 24%;
+  --ring: 217 91% 64%;
+  --chart-1: 217 91% 64%; --chart-2: 0 0% 97%; --chart-3: 2 78% 56%; --chart-4: 150 50% 48%; --chart-5: 220 5% 66%;
   --app-font-sans: 'DM Sans', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'JetBrains Mono', monospace;
@@ -244,15 +244,17 @@
 
 html { color-scheme: dark; background: hsl(var(--background)); }
 body { min-height: 100dvh; -webkit-tap-highlight-color: transparent; }
-.font-display { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; letter-spacing: 0.01em; }
+.font-display { font-family: 'Outfit', sans-serif; font-weight: 300; letter-spacing: -0.01em; }
+body { font-weight: 400; }
+h1,h2,h3,h4,b,strong { font-weight: 300; }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 .grain::after { content:''; position:fixed; inset:0; pointer-events:none; z-index:60; opacity:.07;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>"); }
 .sprockets { background-image: repeating-linear-gradient(90deg, hsl(var(--border)) 0 10px, transparent 10px 22px); height: 6px; }
-.cl-formFieldInput::placeholder { color: #8a8580; opacity: 1; }
+.cl-formFieldInput::placeholder { color: #8b909a; opacity: 1; }
 @keyframes rec { 0%,100%{opacity:1} 50%{opacity:.25} }
 .rec-dot { animation: rec 1.4s ease-in-out infinite; }
 @keyframes drift { from{transform:translateX(0)} to{transform:translateX(-50%)} }
 .reel { animation: drift 40s linear infinite; }
 .tap:active { transform: scale(.97); }
-@media (prefers-reduced-motion: reduce) { .reel,.rec-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .reel,.rec-dot { animation: none; } .tap:active { transform: none; } *,*::before,*::after { scroll-behavior: auto; transition-duration: .01ms; } }
