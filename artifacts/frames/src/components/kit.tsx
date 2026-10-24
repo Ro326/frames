@@ -43,7 +43,7 @@ export const inputCls = 'min-h-12 w-full rounded-md border border-input bg-black
 
 export function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
   return (
-    <label className="block">
+    <label className="block min-w-0">
       <span className="font-mono mb-1.5 block text-[11px] tracking-[0.08em] text-muted-foreground">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-muted-foreground">{hint}</span>}
@@ -54,7 +54,7 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 export function Shell({ children, nav = true }: { children: ReactNode; nav?: boolean }) {
   const { signOut } = useClerk();
   return (
-    <div className="grain min-h-[100dvh]">
+    <div className="grain min-h-[100dvh] w-full min-w-0">
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4">
           <Link href="/studio" data-testid="link-logo"><Logo /></Link>
@@ -66,7 +66,7 @@ export function Shell({ children, nav = true }: { children: ReactNode; nav?: boo
         </div>
         <div className="sprockets opacity-60" />
       </header>
-      <motion.main initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }} className="mx-auto max-w-5xl px-4 pb-24 pt-8">
+      <motion.main initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }} className="mx-auto w-full min-w-0 max-w-5xl px-4 pb-24 pt-8">
         {children}
       </motion.main>
     </div>

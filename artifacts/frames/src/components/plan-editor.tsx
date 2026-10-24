@@ -57,7 +57,7 @@ export function PlanEditor({ project }: { project: Project }) {
                 <button aria-label="Delete shot" data-testid={'button-delete-' + i} onClick={() => { setShots((x) => x.filter((_, j) => j !== i)); setDirty(true); }} className="tap grid size-12 place-items-center rounded-md bg-destructive/15 text-destructive"><Trash2 size={18} /></button>
               </div>}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field label="Section"><select disabled={locked} className={inputCls} value={s.section} onChange={(e) => patch(i, { section: e.target.value as Shot['section'] })} data-testid={'select-section-' + i}>{['Intro', 'Body', 'Outro'].map((o) => <option key={o}>{o}</option>)}</select></Field>
               <Field label="Type"><select disabled={locked} className={inputCls} value={s.type} onChange={(e) => patch(i, { type: e.target.value as Shot['type'] })} data-testid={'select-type-' + i}>{['A-roll', 'B-roll'].map((o) => <option key={o}>{o}</option>)}</select></Field>
               <div className="sm:col-span-2"><Field label="Description"><textarea disabled={locked} rows={2} maxLength={2000} className={inputCls + ' py-3'} value={s.description} onChange={(e) => patch(i, { description: e.target.value })} data-testid={'input-description-' + i} /></Field></div>

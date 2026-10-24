@@ -101,7 +101,7 @@ function BriefForm({ onNeedPro }: { onNeedPro: () => void }) {
           ))}
         </div>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label={'Target length: ' + fmtDur(len)}>
           <input data-testid="input-length" type="number" min={10} max={600} className={inputCls} value={len} onChange={(e) => setLen(Number(e.target.value))} />
           <input aria-label="length slider" type="range" min={10} max={600} step={5} value={Math.min(600, Math.max(10, len))} onChange={(e) => setLen(Number(e.target.value))} className="mt-3 h-8 w-full accent-[#5B9BFF]" />
@@ -175,12 +175,12 @@ export default function Studio() {
         </div>
       </div>
       {status.data && !status.data.ai && <div className="mb-6"><ErrorBox msg="The AI director is not configured on this server. Manual plans still work." /></div>}
-      <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <div className="min-w-0 space-y-4">
           <h2 className="font-display text-3xl font-normal">{freeLimitReached ? 'Continue with Pro' : 'New brief'}</h2>
           {freeLimitReached ? <ProCard highlight paymentsReady={status.data?.payments} /> : <BriefForm onNeedPro={() => setNeedPro(true)} />}
         </div>
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-8">
           <section>
             <h2 className="font-display mb-3 text-3xl font-normal">Projects</h2>
             {projects.isLoading ? <div className="space-y-2"><Skel className="h-20" /><Skel className="h-20" /></div> : projects.isError ? <ErrorBox msg={errInfo(projects.error).msg} onRetry={() => projects.refetch()} /> : list.length === 0 ? (

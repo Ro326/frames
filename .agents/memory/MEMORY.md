@@ -1,2 +1,3 @@
 - [Database peer types](database-peer-types.md) — avoid mixing SQL operators and tables from different Drizzle peer instances.
 - [Browser video rendering](browser-video-rendering.md) — validate FFmpeg WASM probe reports; a sentinel probe status can reject readable sources.
+- [Mobile workflow verification](mobile-layout-verification.md) — check real Studio/Plan/Shoot/Edit layouts; page-level clipping can hide unreachable content.

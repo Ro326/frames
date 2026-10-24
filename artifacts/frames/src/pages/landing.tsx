@@ -55,7 +55,7 @@ export default function Landing() {
 
       <section className="mx-auto max-w-6xl px-5 py-24">
         <h2 className="font-display mb-12 text-4xl font-normal sm:text-4xl">Brief to <span className="text-foreground/45">footage.</span></h2>
-        <div className="grid gap-px bg-border md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-4">
           {steps.map((s, i) => (
             <motion.div key={s.n} initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-60px' }} transition={{ delay: i * 0.08 }} className="group bg-background p-6 transition hover:bg-card">
               <div className="mb-10 flex items-center justify-between"><span className="font-mono text-xs text-primary">{s.n}</span><s.i size={20} className="text-muted-foreground transition group-hover:text-primary" /></div>
@@ -66,7 +66,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-10 px-5 py-16 md:grid-cols-[1.1fr_1fr]">
+      <section className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-5 py-16 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div>
           <HardDrive className="mb-5 text-primary" />
           <h2 className="font-display text-4xl font-normal sm:text-4xl">Your clips<br />never leave<br />your phone.</h2>
@@ -79,7 +79,7 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 py-24">
-        <div className="grid gap-px bg-border md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-px bg-border md:grid-cols-2">
           <div className="bg-background p-8">
             <p className="font-mono text-xs tracking-[0.04em] text-muted-foreground">Free</p>
             <p className="font-display mt-2 text-4xl font-normal">5 free tries</p>
